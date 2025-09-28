@@ -11,8 +11,14 @@ Time constraints will significantly impact the approach
 
 - Construct the dataset
 - Lit review
+  - https://arxiv.org/abs/2211.09800
+  - https://arxiv.org/pdf/1911.02685
 - Model
 - Deployment
+
+## Data
+
+- VITON-HD: <https://www.kaggle.com/datasets/marquis03/high-resolution-viton-zalando-dataset>
 
 ## Installation
 
@@ -21,6 +27,8 @@ Time constraints will significantly impact the approach
 ### Installing development requirements
 
 ```bash
+uv ~/venv yoso --python 3.13
+source ~/venv/yoso/bin/activate
 uv pip install -r requirements/requirements.txt
 ```
 
