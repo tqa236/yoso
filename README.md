@@ -5,7 +5,7 @@
 Time constraints will significantly impact the approach
 
 - If the image needs to be rendered in near real time (for example, if a client uploads an image to the website to check if a garment suits them or not): fast solution is preferred
-- If time is not a constraint (but mainly labor cost): We can opt for a solution that gives the best possible quality.
+- If time is not a constraint (but mainly labor cost): We can opt for a solution that gives the best possible quality. => Since we focus on color correction, this is the right approach.
 
 ## Tasks
 
@@ -16,9 +16,18 @@ Time constraints will significantly impact the approach
 - Model
 - Deployment
 
+### Metrics
+
+- Hedonic value
+- Utilitarian value
+
 ## Data
 
 - VITON-HD: <https://www.kaggle.com/datasets/marquis03/high-resolution-viton-zalando-dataset>
+
+## Discussion
+
+Some of the required input for color correction should already be available from earlier step.
 
 ## Installation
 
