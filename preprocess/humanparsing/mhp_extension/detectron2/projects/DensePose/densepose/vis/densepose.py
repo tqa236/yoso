@@ -9,7 +9,9 @@ from .base import Boxes, Image, MatrixVisualizer, PointsVisualizer
 
 
 class DensePoseResultsVisualizer(object):
-    def visualize(self, image_bgr: Image, densepose_result: Optional[DensePoseResult]) -> Image:
+    def visualize(
+        self, image_bgr: Image, densepose_result: Optional[DensePoseResult]
+    ) -> Image:
         if densepose_result is None:
             return image_bgr
         context = self.create_visualization_context(image_bgr)
@@ -102,7 +104,9 @@ class DensePoseResultsMplContourVisualizer(DensePoseResultsVisualizer):
         image_bgr = image_rgb[:, :, ::-1].copy()
         return image_bgr
 
-    def visualize_iuv_arr(self, context, iuv_arr: np.ndarray, bbox_xywh: Boxes) -> Image:
+    def visualize_iuv_arr(
+        self, context, iuv_arr: np.ndarray, bbox_xywh: Boxes
+    ) -> Image:
         import matplotlib.pyplot as plt
 
         u = _extract_u_from_iuvarr(iuv_arr).astype(float) / 255.0
@@ -148,7 +152,9 @@ class DensePoseResultsCustomContourVisualizer(DensePoseResultsVisualizer):
     def get_image_bgr_from_context(self, context):
         return context
 
-    def visualize_iuv_arr(self, context, iuv_arr: np.ndarray, bbox_xywh: Boxes) -> Image:
+    def visualize_iuv_arr(
+        self, context, iuv_arr: np.ndarray, bbox_xywh: Boxes
+    ) -> Image:
         image_bgr = self.get_image_bgr_from_context(context)
         segm = _extract_i_from_iuvarr(iuv_arr)
         u = _extract_u_from_iuvarr(iuv_arr).astype(float) / 255.0
@@ -176,9 +182,13 @@ class DensePoseResultsCustomContourVisualizer(DensePoseResultsVisualizer):
                 if (level < arr_min) or (level > arr_max):
                     continue
                 vp = arr[i0:i1, j0:j1] >= level
-                bin_codes = vp[:-1, :-1] + vp[1:, :-1] * 2 + vp[1:, 1:] * 4 + vp[:-1, 1:] * 8
+                bin_codes = (
+                    vp[:-1, :-1] + vp[1:, :-1] * 2 + vp[1:, 1:] * 4 + vp[:-1, 1:] * 8
+                )
                 mp = mask[i0:i1, j0:j1]
-                bin_mask_codes = mp[:-1, :-1] + mp[1:, :-1] * 2 + mp[1:, 1:] * 4 + mp[:-1, 1:] * 8
+                bin_mask_codes = (
+                    mp[:-1, :-1] + mp[1:, :-1] * 2 + mp[1:, 1:] * 4 + mp[:-1, 1:] * 8
+                )
                 it = np.nditer(bin_codes, flags=["multi_index"])
                 color_bgr = self.level_colors_bgr[level_idx]
                 linewidth = self.linewidths[level_idx]
@@ -308,7 +318,9 @@ except ModuleNotFoundError:
     DensePoseResultsContourVisualizer = DensePoseResultsCustomContourVisualizer
 
 
-class DensePoseResultsFineSegmentationVisualizer(DensePoseMaskedColormapResultsVisualizer):
+class DensePoseResultsFineSegmentationVisualizer(
+    DensePoseMaskedColormapResultsVisualizer
+):
     def __init__(self, inplace=True, cmap=cv2.COLORMAP_PARULA, alpha=0.7):
         super(DensePoseResultsFineSegmentationVisualizer, self).__init__(
             _extract_i_from_iuvarr,
@@ -323,14 +335,24 @@ class DensePoseResultsFineSegmentationVisualizer(DensePoseMaskedColormapResultsV
 class DensePoseResultsUVisualizer(DensePoseMaskedColormapResultsVisualizer):
     def __init__(self, inplace=True, cmap=cv2.COLORMAP_PARULA, alpha=0.7):
         super(DensePoseResultsUVisualizer, self).__init__(
-            _extract_u_from_iuvarr, _extract_i_from_iuvarr, inplace, cmap, alpha, val_scale=1.0
+            _extract_u_from_iuvarr,
+            _extract_i_from_iuvarr,
+            inplace,
+            cmap,
+            alpha,
+            val_scale=1.0,
         )
 
 
 class DensePoseResultsVVisualizer(DensePoseMaskedColormapResultsVisualizer):
     def __init__(self, inplace=True, cmap=cv2.COLORMAP_PARULA, alpha=0.7):
         super(DensePoseResultsVVisualizer, self).__init__(
-            _extract_v_from_iuvarr, _extract_i_from_iuvarr, inplace, cmap, alpha, val_scale=1.0
+            _extract_v_from_iuvarr,
+            _extract_i_from_iuvarr,
+            inplace,
+            cmap,
+            alpha,
+            val_scale=1.0,
         )
 
 
@@ -344,7 +366,9 @@ class DensePoseOutputsFineSegmentationVisualizer(object):
         )
 
     def visualize(
-        self, image_bgr: Image, dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]]
+        self,
+        image_bgr: Image,
+        dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]],
     ) -> Image:
         if dp_output_with_bboxes is None:
             return image_bgr
@@ -354,25 +378,26 @@ class DensePoseOutputsFineSegmentationVisualizer(object):
         U = densepose_output.U
         V = densepose_output.V
         N = S.size(0)
-        assert N == I.size(
-            0
-        ), "densepose outputs S {} and I {}" " should have equal first dim size".format(
-            S.size(), I.size()
+        assert N == I.size(0), (
+            "densepose outputs S {} and I {} should have equal first dim size".format(
+                S.size(), I.size()
+            )
         )
-        assert N == U.size(
-            0
-        ), "densepose outputs S {} and U {}" " should have equal first dim size".format(
-            S.size(), U.size()
+        assert N == U.size(0), (
+            "densepose outputs S {} and U {} should have equal first dim size".format(
+                S.size(), U.size()
+            )
         )
-        assert N == V.size(
-            0
-        ), "densepose outputs S {} and V {}" " should have equal first dim size".format(
-            S.size(), V.size()
+        assert N == V.size(0), (
+            "densepose outputs S {} and V {} should have equal first dim size".format(
+                S.size(), V.size()
+            )
         )
-        assert N == len(
-            bboxes_xywh
-        ), "number of bounding boxes {}" " should be equal to first dim size of outputs {}".format(
-            len(bboxes_xywh), N
+        assert N == len(bboxes_xywh), (
+            "number of bounding boxes {}"
+            " should be equal to first dim size of outputs {}".format(
+                len(bboxes_xywh), N
+            )
         )
         for n in range(N):
             Sn = S[n].argmax(dim=0)
@@ -381,7 +406,9 @@ class DensePoseOutputsFineSegmentationVisualizer(object):
             mask = np.zeros(matrix.shape, dtype=np.uint8)
             mask[matrix > 0] = 1
             bbox_xywh = bboxes_xywh[n]
-            image_bgr = self.mask_visualizer.visualize(image_bgr, mask, matrix, bbox_xywh)
+            image_bgr = self.mask_visualizer.visualize(
+                image_bgr, mask, matrix, bbox_xywh
+            )
         return image_bgr
 
 
@@ -392,38 +419,41 @@ class DensePoseOutputsUVisualizer(object):
         )
 
     def visualize(
-        self, image_bgr: Image, dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]]
+        self,
+        image_bgr: Image,
+        dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]],
     ) -> Image:
         if dp_output_with_bboxes is None:
             return image_bgr
         densepose_output, bboxes_xywh = dp_output_with_bboxes
-        assert isinstance(
-            densepose_output, DensePoseOutput
-        ), "DensePoseOutput expected, {} encountered".format(type(densepose_output))
+        assert isinstance(densepose_output, DensePoseOutput), (
+            "DensePoseOutput expected, {} encountered".format(type(densepose_output))
+        )
         S = densepose_output.S
         I = densepose_output.I  # noqa
         U = densepose_output.U
         V = densepose_output.V
         N = S.size(0)
-        assert N == I.size(
-            0
-        ), "densepose outputs S {} and I {}" " should have equal first dim size".format(
-            S.size(), I.size()
+        assert N == I.size(0), (
+            "densepose outputs S {} and I {} should have equal first dim size".format(
+                S.size(), I.size()
+            )
         )
-        assert N == U.size(
-            0
-        ), "densepose outputs S {} and U {}" " should have equal first dim size".format(
-            S.size(), U.size()
+        assert N == U.size(0), (
+            "densepose outputs S {} and U {} should have equal first dim size".format(
+                S.size(), U.size()
+            )
         )
-        assert N == V.size(
-            0
-        ), "densepose outputs S {} and V {}" " should have equal first dim size".format(
-            S.size(), V.size()
+        assert N == V.size(0), (
+            "densepose outputs S {} and V {} should have equal first dim size".format(
+                S.size(), V.size()
+            )
         )
-        assert N == len(
-            bboxes_xywh
-        ), "number of bounding boxes {}" " should be equal to first dim size of outputs {}".format(
-            len(bboxes_xywh), N
+        assert N == len(bboxes_xywh), (
+            "number of bounding boxes {}"
+            " should be equal to first dim size of outputs {}".format(
+                len(bboxes_xywh), N
+            )
         )
         for n in range(N):
             Sn = S[n].argmax(dim=0)
@@ -434,7 +464,9 @@ class DensePoseOutputsUVisualizer(object):
             Un = U[n].cpu().numpy().astype(np.float32)
             Uvis = np.zeros(segmentation.shape, dtype=np.float32)
             for partId in range(Un.shape[0]):
-                Uvis[segmentation == partId] = Un[partId][segmentation == partId].clip(0, 1) * 255
+                Uvis[segmentation == partId] = (
+                    Un[partId][segmentation == partId].clip(0, 1) * 255
+                )
                 bbox_xywh = bboxes_xywh[n]
             image_bgr = self.mask_visualizer.visualize(image_bgr, mask, Uvis, bbox_xywh)
         return image_bgr
@@ -447,38 +479,41 @@ class DensePoseOutputsVVisualizer(object):
         )
 
     def visualize(
-        self, image_bgr: Image, dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]]
+        self,
+        image_bgr: Image,
+        dp_output_with_bboxes: Optional[Tuple[DensePoseOutput, Boxes]],
     ) -> Image:
         if dp_output_with_bboxes is None:
             return image_bgr
         densepose_output, bboxes_xywh = dp_output_with_bboxes
-        assert isinstance(
-            densepose_output, DensePoseOutput
-        ), "DensePoseOutput expected, {} encountered".format(type(densepose_output))
+        assert isinstance(densepose_output, DensePoseOutput), (
+            "DensePoseOutput expected, {} encountered".format(type(densepose_output))
+        )
         S = densepose_output.S
         I = densepose_output.I  # noqa
         U = densepose_output.U
         V = densepose_output.V
         N = S.size(0)
-        assert N == I.size(
-            0
-        ), "densepose outputs S {} and I {}" " should have equal first dim size".format(
-            S.size(), I.size()
+        assert N == I.size(0), (
+            "densepose outputs S {} and I {} should have equal first dim size".format(
+                S.size(), I.size()
+            )
         )
-        assert N == U.size(
-            0
-        ), "densepose outputs S {} and U {}" " should have equal first dim size".format(
-            S.size(), U.size()
+        assert N == U.size(0), (
+            "densepose outputs S {} and U {} should have equal first dim size".format(
+                S.size(), U.size()
+            )
         )
-        assert N == V.size(
-            0
-        ), "densepose outputs S {} and V {}" " should have equal first dim size".format(
-            S.size(), V.size()
+        assert N == V.size(0), (
+            "densepose outputs S {} and V {} should have equal first dim size".format(
+                S.size(), V.size()
+            )
         )
-        assert N == len(
-            bboxes_xywh
-        ), "number of bounding boxes {}" " should be equal to first dim size of outputs {}".format(
-            len(bboxes_xywh), N
+        assert N == len(bboxes_xywh), (
+            "number of bounding boxes {}"
+            " should be equal to first dim size of outputs {}".format(
+                len(bboxes_xywh), N
+            )
         )
         for n in range(N):
             Sn = S[n].argmax(dim=0)
@@ -489,7 +524,9 @@ class DensePoseOutputsVVisualizer(object):
             Vn = V[n].cpu().numpy().astype(np.float32)
             Vvis = np.zeros(segmentation.shape, dtype=np.float32)
             for partId in range(Vn.size(0)):
-                Vvis[segmentation == partId] = Vn[partId][segmentation == partId].clip(0, 1) * 255
+                Vvis[segmentation == partId] = (
+                    Vn[partId][segmentation == partId].clip(0, 1) * 255
+                )
             bbox_xywh = bboxes_xywh[n]
             image_bgr = self.mask_visualizer.visualize(image_bgr, mask, Vvis, bbox_xywh)
         return image_bgr
@@ -511,7 +548,9 @@ class DensePoseDataCoarseSegmentationVisualizer(object):
     def visualize(
         self,
         image_bgr: Image,
-        bbox_densepose_datas: Optional[Tuple[Iterable[Boxes], Iterable[DensePoseDataRelative]]],
+        bbox_densepose_datas: Optional[
+            Tuple[Iterable[Boxes], Iterable[DensePoseDataRelative]]
+        ],
     ) -> Image:
         if bbox_densepose_datas is None:
             return image_bgr
@@ -519,7 +558,9 @@ class DensePoseDataCoarseSegmentationVisualizer(object):
             matrix = densepose_data.segm.numpy()
             mask = np.zeros(matrix.shape, dtype=np.uint8)
             mask[matrix > 0] = 1
-            image_bgr = self.mask_visualizer.visualize(image_bgr, mask, matrix, bbox_xywh.numpy())
+            image_bgr = self.mask_visualizer.visualize(
+                image_bgr, mask, matrix, bbox_xywh.numpy()
+            )
         return image_bgr
 
 
@@ -532,7 +573,9 @@ class DensePoseDataPointsVisualizer(object):
     def visualize(
         self,
         image_bgr: Image,
-        bbox_densepose_datas: Optional[Tuple[Iterable[Boxes], Iterable[DensePoseDataRelative]]],
+        bbox_densepose_datas: Optional[
+            Tuple[Iterable[Boxes], Iterable[DensePoseDataRelative]]
+        ],
     ) -> Image:
         if bbox_densepose_datas is None:
             return image_bgr
@@ -547,9 +590,12 @@ class DensePoseDataPointsVisualizer(object):
                 v = self.densepose_data_to_value_fn(densepose_data)
                 img_colors_bgr = cv2.applyColorMap(v, self.cmap)
                 colors_bgr = [
-                    [int(v) for v in img_color_bgr.ravel()] for img_color_bgr in img_colors_bgr
+                    [int(v) for v in img_color_bgr.ravel()]
+                    for img_color_bgr in img_colors_bgr
                 ]
-                image_bgr = self.points_visualizer.visualize(image_bgr, pts_xy, colors_bgr)
+                image_bgr = self.points_visualizer.visualize(
+                    image_bgr, pts_xy, colors_bgr
+                )
         return image_bgr
 
 

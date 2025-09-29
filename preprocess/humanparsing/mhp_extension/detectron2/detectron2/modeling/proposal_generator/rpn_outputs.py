@@ -111,7 +111,9 @@ def find_top_rpn_proposals(
 
         topk_proposals.append(topk_proposals_i)
         topk_scores.append(topk_scores_i)
-        level_ids.append(torch.full((num_proposals_i,), level_id, dtype=torch.int64, device=device))
+        level_ids.append(
+            torch.full((num_proposals_i,), level_id, dtype=torch.int64, device=device)
+        )
 
     # 2. Concat all levels together
     topk_scores = cat(topk_scores, dim=1)
@@ -125,7 +127,9 @@ def find_top_rpn_proposals(
         scores_per_img = topk_scores[n]
         lvl = level_ids
 
-        valid_mask = torch.isfinite(boxes.tensor).all(dim=1) & torch.isfinite(scores_per_img)
+        valid_mask = torch.isfinite(boxes.tensor).all(dim=1) & torch.isfinite(
+            scores_per_img
+        )
         if not valid_mask.all():
             if training:
                 raise FloatingPointError(
@@ -159,7 +163,11 @@ def find_top_rpn_proposals(
 
 
 def rpn_losses(
-    gt_labels, gt_anchor_deltas, pred_objectness_logits, pred_anchor_deltas, smooth_l1_beta
+    gt_labels,
+    gt_anchor_deltas,
+    pred_objectness_logits,
+    pred_anchor_deltas,
+    smooth_l1_beta,
 ):
     """
     Args:
@@ -181,7 +189,10 @@ def rpn_losses(
     """
     pos_masks = gt_labels == 1
     localization_loss = smooth_l1_loss(
-        pred_anchor_deltas[pos_masks], gt_anchor_deltas[pos_masks], smooth_l1_beta, reduction="sum"
+        pred_anchor_deltas[pos_masks],
+        gt_anchor_deltas[pos_masks],
+        smooth_l1_beta,
+        reduction="sum",
     )
 
     valid_masks = gt_labels >= 0
@@ -266,7 +277,9 @@ class RPNOutputs(object):
         """
         gt_labels = torch.stack(self.gt_labels)
         anchors = self.anchors[0].cat(self.anchors).tensor  # Ax(4 or 5)
-        gt_anchor_deltas = [self.box2box_transform.get_deltas(anchors, k) for k in self.gt_boxes]
+        gt_anchor_deltas = [
+            self.box2box_transform.get_deltas(anchors, k) for k in self.gt_boxes
+        ]
         gt_anchor_deltas = torch.stack(gt_anchor_deltas)
 
         # Log the number of positive/negative anchors per-image that's used in training
@@ -300,13 +313,17 @@ class RPNOutputs(object):
         """
         proposals = []
         # For each feature map
-        for anchors_i, pred_anchor_deltas_i in zip(self.anchors, self.pred_anchor_deltas):
+        for anchors_i, pred_anchor_deltas_i in zip(
+            self.anchors, self.pred_anchor_deltas
+        ):
             B = anchors_i.tensor.size(1)
             N = self.num_images
             pred_anchor_deltas_i = pred_anchor_deltas_i.reshape(-1, B)
             # Expand anchors to shape (N*Hi*Wi*A, B)
             anchors_i = anchors_i.tensor.unsqueeze(0).expand(N, -1, -1).reshape(-1, B)
-            proposals_i = self.box2box_transform.apply_deltas(pred_anchor_deltas_i, anchors_i)
+            proposals_i = self.box2box_transform.apply_deltas(
+                pred_anchor_deltas_i, anchors_i
+            )
             # Append feature map proposals with shape (N, Hi*Wi*A, B)
             proposals.append(proposals_i.view(N, -1, B))
         return proposals

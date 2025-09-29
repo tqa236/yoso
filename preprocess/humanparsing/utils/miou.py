@@ -6,15 +6,35 @@ from collections import OrderedDict
 from PIL import Image as PILImage
 from utils.transforms import transform_parsing
 
-LABELS = ['Background', 'Hat', 'Hair', 'Glove', 'Sunglasses', 'Upper-clothes', 'Dress', 'Coat', \
-          'Socks', 'Pants', 'Jumpsuits', 'Scarf', 'Skirt', 'Face', 'Left-arm', 'Right-arm', 'Left-leg',
-          'Right-leg', 'Left-shoe', 'Right-shoe']
+LABELS = [
+    "Background",
+    "Hat",
+    "Hair",
+    "Glove",
+    "Sunglasses",
+    "Upper-clothes",
+    "Dress",
+    "Coat",
+    "Socks",
+    "Pants",
+    "Jumpsuits",
+    "Scarf",
+    "Skirt",
+    "Face",
+    "Left-arm",
+    "Right-arm",
+    "Left-leg",
+    "Right-leg",
+    "Left-shoe",
+    "Right-shoe",
+]
 
 
 # LABELS = ['Background', 'Head', 'Torso', 'Upper Arms', 'Lower Arms', 'Upper Legs', 'Lower Legs']
 
+
 def get_palette(num_cls):
-    """ Returns the color map for visualizing the segmentation mask.
+    """Returns the color map for visualizing the segmentation mask.
     Args:
         num_cls: Number of classes
     Returns:
@@ -30,9 +50,9 @@ def get_palette(num_cls):
         palette[j * 3 + 2] = 0
         i = 0
         while lab:
-            palette[j * 3 + 0] |= (((lab >> 0) & 1) << (7 - i))
-            palette[j * 3 + 1] |= (((lab >> 1) & 1) << (7 - i))
-            palette[j * 3 + 2] |= (((lab >> 2) & 1) << (7 - i))
+            palette[j * 3 + 0] |= ((lab >> 0) & 1) << (7 - i)
+            palette[j * 3 + 1] |= ((lab >> 1) & 1) << (7 - i)
+            palette[j * 3 + 2] |= ((lab >> 2) & 1) << (7 - i)
             i += 1
             lab >>= 3
     return palette
@@ -46,7 +66,7 @@ def get_confusion_matrix(gt_label, pred_label, num_classes):
     :param num_classes: the nunber of class
     :return: the confusion matrix
     """
-    index = (gt_label * num_classes + pred_label).astype('int32')
+    index = (gt_label * num_classes + pred_label).astype("int32")
     label_count = np.bincount(index)
     confusion_matrix = np.zeros((num_classes, num_classes))
 
@@ -59,15 +79,17 @@ def get_confusion_matrix(gt_label, pred_label, num_classes):
     return confusion_matrix
 
 
-def compute_mean_ioU(preds, scales, centers, num_classes, datadir, input_size=[473, 473], dataset='val'):
-    val_file = os.path.join(datadir, dataset + '_id.txt')
+def compute_mean_ioU(
+    preds, scales, centers, num_classes, datadir, input_size=[473, 473], dataset="val"
+):
+    val_file = os.path.join(datadir, dataset + "_id.txt")
     val_id = [i_id.strip() for i_id in open(val_file)]
 
     confusion_matrix = np.zeros((num_classes, num_classes))
 
     for i, pred_out in enumerate(preds):
         im_name = val_id[i]
-        gt_path = os.path.join(datadir, dataset + '_segmentations', im_name + '.png')
+        gt_path = os.path.join(datadir, dataset + "_segmentations", im_name + ".png")
         gt = np.array(PILImage.open(gt_path))
         h, w = gt.shape
         s = scales[i]
@@ -90,35 +112,35 @@ def compute_mean_ioU(preds, scales, centers, num_classes, datadir, input_size=[4
 
     pixel_accuracy = (tp.sum() / pos.sum()) * 100
     mean_accuracy = ((tp / np.maximum(1.0, pos)).mean()) * 100
-    IoU_array = (tp / np.maximum(1.0, pos + res - tp))
+    IoU_array = tp / np.maximum(1.0, pos + res - tp)
     IoU_array = IoU_array * 100
     mean_IoU = IoU_array.mean()
-    print('Pixel accuracy: %f \n' % pixel_accuracy)
-    print('Mean accuracy: %f \n' % mean_accuracy)
-    print('Mean IU: %f \n' % mean_IoU)
+    print("Pixel accuracy: %f \n" % pixel_accuracy)
+    print("Mean accuracy: %f \n" % mean_accuracy)
+    print("Mean IU: %f \n" % mean_IoU)
     name_value = []
 
     for i, (label, iou) in enumerate(zip(LABELS, IoU_array)):
         name_value.append((label, iou))
 
-    name_value.append(('Pixel accuracy', pixel_accuracy))
-    name_value.append(('Mean accuracy', mean_accuracy))
-    name_value.append(('Mean IU', mean_IoU))
+    name_value.append(("Pixel accuracy", pixel_accuracy))
+    name_value.append(("Mean accuracy", mean_accuracy))
+    name_value.append(("Mean IU", mean_IoU))
     name_value = OrderedDict(name_value)
     return name_value
 
 
-def compute_mean_ioU_file(preds_dir, num_classes, datadir, dataset='val'):
-    list_path = os.path.join(datadir, dataset + '_id.txt')
+def compute_mean_ioU_file(preds_dir, num_classes, datadir, dataset="val"):
+    list_path = os.path.join(datadir, dataset + "_id.txt")
     val_id = [i_id.strip() for i_id in open(list_path)]
 
     confusion_matrix = np.zeros((num_classes, num_classes))
 
     for i, im_name in enumerate(val_id):
-        gt_path = os.path.join(datadir, 'segmentations', im_name + '.png')
+        gt_path = os.path.join(datadir, "segmentations", im_name + ".png")
         gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)
 
-        pred_path = os.path.join(preds_dir, im_name + '.png')
+        pred_path = os.path.join(preds_dir, im_name + ".png")
         pred = np.asarray(PILImage.open(pred_path))
 
         gt = np.asarray(gt, dtype=np.int32)
@@ -137,19 +159,19 @@ def compute_mean_ioU_file(preds_dir, num_classes, datadir, dataset='val'):
 
     pixel_accuracy = (tp.sum() / pos.sum()) * 100
     mean_accuracy = ((tp / np.maximum(1.0, pos)).mean()) * 100
-    IoU_array = (tp / np.maximum(1.0, pos + res - tp))
+    IoU_array = tp / np.maximum(1.0, pos + res - tp)
     IoU_array = IoU_array * 100
     mean_IoU = IoU_array.mean()
-    print('Pixel accuracy: %f \n' % pixel_accuracy)
-    print('Mean accuracy: %f \n' % mean_accuracy)
-    print('Mean IU: %f \n' % mean_IoU)
+    print("Pixel accuracy: %f \n" % pixel_accuracy)
+    print("Mean accuracy: %f \n" % mean_accuracy)
+    print("Mean IU: %f \n" % mean_IoU)
     name_value = []
 
     for i, (label, iou) in enumerate(zip(LABELS, IoU_array)):
         name_value.append((label, iou))
 
-    name_value.append(('Pixel accuracy', pixel_accuracy))
-    name_value.append(('Mean accuracy', mean_accuracy))
-    name_value.append(('Mean IU', mean_IoU))
+    name_value.append(("Pixel accuracy", pixel_accuracy))
+    name_value.append(("Mean accuracy", mean_accuracy))
+    name_value.append(("Mean IU", mean_IoU))
     name_value = OrderedDict(name_value)
     return name_value

@@ -25,7 +25,13 @@ import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
-from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
+from detectron2.engine import (
+    DefaultTrainer,
+    default_argument_parser,
+    default_setup,
+    hooks,
+    launch,
+)
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
     CityscapesSemSegEvaluator,
@@ -42,14 +48,24 @@ from detectron2.modeling import GeneralizedRCNNWithTTA
 # Register Custom Dataset
 from detectron2.data.datasets import register_coco_instances
 
-register_coco_instances("CIHP_train", {}, "../../data/msrcnn_finetune_annotations/CIHP_train.json",
-                        "../../data/instance-level_human_parsing/Training/Images")
-register_coco_instances("CIHP_val", {}, "../../data/msrcnn_finetune_annotations/CIHP_val.json",
-                        "../../data/instance-level_human_parsing/Validation/Images")
-register_coco_instances("demo_train", {}, "../../demo/annotations/demo_train.json",
-                        "../../demo/img")
-register_coco_instances("demo_val", {}, "../../demo/annotations/demo_val.json",
-                        "../../demo/img")
+register_coco_instances(
+    "CIHP_train",
+    {},
+    "../../data/msrcnn_finetune_annotations/CIHP_train.json",
+    "../../data/instance-level_human_parsing/Training/Images",
+)
+register_coco_instances(
+    "CIHP_val",
+    {},
+    "../../data/msrcnn_finetune_annotations/CIHP_val.json",
+    "../../data/instance-level_human_parsing/Validation/Images",
+)
+register_coco_instances(
+    "demo_train", {}, "../../demo/annotations/demo_train.json", "../../demo/img"
+)
+register_coco_instances(
+    "demo_val", {}, "../../demo/annotations/demo_val.json", "../../demo/img"
+)
 
 
 class Trainer(DefaultTrainer):
@@ -88,14 +104,14 @@ class Trainer(DefaultTrainer):
         if evaluator_type == "coco_panoptic_seg":
             evaluator_list.append(COCOPanopticEvaluator(dataset_name, output_folder))
         if evaluator_type == "cityscapes_instance":
-            assert (
-                    torch.cuda.device_count() >= comm.get_rank()
-            ), "CityscapesEvaluator currently do not work with multiple machines."
+            assert torch.cuda.device_count() >= comm.get_rank(), (
+                "CityscapesEvaluator currently do not work with multiple machines."
+            )
             return CityscapesInstanceEvaluator(dataset_name)
         if evaluator_type == "cityscapes_sem_seg":
-            assert (
-                    torch.cuda.device_count() >= comm.get_rank()
-            ), "CityscapesEvaluator currently do not work with multiple machines."
+            assert torch.cuda.device_count() >= comm.get_rank(), (
+                "CityscapesEvaluator currently do not work with multiple machines."
+            )
             return CityscapesSemSegEvaluator(dataset_name)
         elif evaluator_type == "pascal_voc":
             return PascalVOCDetectionEvaluator(dataset_name)

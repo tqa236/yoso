@@ -47,7 +47,8 @@ class Decoder(nn.Module):
         for in_feature in self.in_features:
             head_ops = []
             head_length = max(
-                1, int(np.log2(feature_strides[in_feature]) - np.log2(self.common_stride))
+                1,
+                int(np.log2(feature_strides[in_feature]) - np.log2(self.common_stride)),
             )
             for k in range(head_length):
                 conv = Conv2d(
@@ -64,11 +65,15 @@ class Decoder(nn.Module):
                 head_ops.append(conv)
                 if feature_strides[in_feature] != self.common_stride:
                     head_ops.append(
-                        nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
+                        nn.Upsample(
+                            scale_factor=2, mode="bilinear", align_corners=False
+                        )
                     )
             self.scale_heads.append(nn.Sequential(*head_ops))
             self.add_module(in_feature, self.scale_heads[-1])
-        self.predictor = Conv2d(conv_dims, num_classes, kernel_size=1, stride=1, padding=0)
+        self.predictor = Conv2d(
+            conv_dims, num_classes, kernel_size=1, stride=1, padding=0
+        )
         weight_init.c2_msra_fill(self.predictor)
 
     def forward(self, features: List[torch.Tensor]):
@@ -105,7 +110,9 @@ class DensePoseROIHeads(StandardROIHeads):
         if self.use_decoder:
             dp_pooler_scales = (1.0 / input_shape[self.in_features[0]].stride,)
         else:
-            dp_pooler_scales = tuple(1.0 / input_shape[k].stride for k in self.in_features)
+            dp_pooler_scales = tuple(
+                1.0 / input_shape[k].stride for k in self.in_features
+            )
         in_channels = [input_shape[f].channels for f in self.in_features][0]
 
         if self.use_decoder:
@@ -124,7 +131,9 @@ class DensePoseROIHeads(StandardROIHeads):
         self.densepose_losses = build_densepose_losses(cfg)
         self.embedder = build_densepose_embedder(cfg)
 
-    def _forward_densepose(self, features: Dict[str, torch.Tensor], instances: List[Instances]):
+    def _forward_densepose(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ):
         """
         Forward logic of the densepose prediction branch.
 
@@ -148,7 +157,9 @@ class DensePoseROIHeads(StandardROIHeads):
         features_list = [features[f] for f in self.in_features]
         if self.training:
             proposals, _ = select_foreground_proposals(instances, self.num_classes)
-            features_list, proposals = self.densepose_data_filter(features_list, proposals)
+            features_list, proposals = self.densepose_data_filter(
+                features_list, proposals
+            )
             if len(proposals) > 0:
                 proposal_boxes = [x.proposal_boxes for x in proposals]
 
@@ -157,7 +168,9 @@ class DensePoseROIHeads(StandardROIHeads):
 
                 features_dp = self.densepose_pooler(features_list, proposal_boxes)
                 densepose_head_outputs = self.densepose_head(features_dp)
-                densepose_predictor_outputs = self.densepose_predictor(densepose_head_outputs)
+                densepose_predictor_outputs = self.densepose_predictor(
+                    densepose_head_outputs
+                )
                 densepose_loss_dict = self.densepose_losses(
                     proposals, densepose_predictor_outputs, embedder=self.embedder
                 )
@@ -171,7 +184,9 @@ class DensePoseROIHeads(StandardROIHeads):
             features_dp = self.densepose_pooler(features_list, pred_boxes)
             if len(features_dp) > 0:
                 densepose_head_outputs = self.densepose_head(features_dp)
-                densepose_predictor_outputs = self.densepose_predictor(densepose_head_outputs)
+                densepose_predictor_outputs = self.densepose_predictor(
+                    densepose_head_outputs
+                )
             else:
                 densepose_predictor_outputs = None
 

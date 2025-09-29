@@ -28,7 +28,7 @@ class ToMaskConverter(BaseConverter):
         boxes: Boxes,
         image_size_hw: ImageSizeType,
         *args,
-        **kwargs
+        **kwargs,
     ) -> BitMasks:
         """
         Convert DensePose predictor outputs to BitMasks using some registered

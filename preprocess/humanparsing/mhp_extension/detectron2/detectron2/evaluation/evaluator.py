@@ -91,9 +91,11 @@ class DatasetEvaluators(DatasetEvaluator):
             result = evaluator.evaluate()
             if is_main_process() and result is not None:
                 for k, v in result.items():
-                    assert (
-                        k not in results
-                    ), "Different evaluators produce results with the same key {}".format(k)
+                    assert k not in results, (
+                        "Different evaluators produce results with the same key {}".format(
+                            k
+                        )
+                    )
                     results[k] = v
         return results
 
@@ -147,8 +149,12 @@ def inference_on_dataset(model, data_loader, evaluator):
             iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
             seconds_per_img = total_compute_time / iters_after_start
             if idx >= num_warmup * 2 or seconds_per_img > 5:
-                total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
-                eta = datetime.timedelta(seconds=int(total_seconds_per_img * (total - idx - 1)))
+                total_seconds_per_img = (
+                    time.perf_counter() - start_time
+                ) / iters_after_start
+                eta = datetime.timedelta(
+                    seconds=int(total_seconds_per_img * (total - idx - 1))
+                )
                 log_every_n_seconds(
                     logging.INFO,
                     "Inference done {}/{}. {:.4f} s / demo. ETA={}".format(
@@ -169,7 +175,9 @@ def inference_on_dataset(model, data_loader, evaluator):
     total_compute_time_str = str(datetime.timedelta(seconds=int(total_compute_time)))
     logger.info(
         "Total inference pure compute time: {} ({:.6f} s / demo per device, on {} devices)".format(
-            total_compute_time_str, total_compute_time / (total - num_warmup), num_devices
+            total_compute_time_str,
+            total_compute_time / (total - num_warmup),
+            num_devices,
         )
     )
 

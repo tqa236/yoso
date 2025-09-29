@@ -41,7 +41,9 @@ def mask_rcnn_loss(pred_mask_logits, instances, vis_period=0):
     cls_agnostic_mask = pred_mask_logits.size(1) == 1
     total_num_masks = pred_mask_logits.size(0)
     mask_side_len = pred_mask_logits.size(2)
-    assert pred_mask_logits.size(2) == pred_mask_logits.size(3), "Mask prediction must be square!"
+    assert pred_mask_logits.size(2) == pred_mask_logits.size(3), (
+        "Mask prediction must be square!"
+    )
 
     gt_classes = []
     gt_masks = []
@@ -84,7 +86,9 @@ def mask_rcnn_loss(pred_mask_logits, instances, vis_period=0):
     false_positive = (mask_incorrect & ~gt_masks_bool).sum().item() / max(
         gt_masks_bool.numel() - num_positive, 1.0
     )
-    false_negative = (mask_incorrect & gt_masks_bool).sum().item() / max(num_positive, 1.0)
+    false_negative = (mask_incorrect & gt_masks_bool).sum().item() / max(
+        num_positive, 1.0
+    )
 
     storage = get_event_storage()
     storage.put_scalar("mask_rcnn/accuracy", mask_accuracy)
@@ -98,7 +102,9 @@ def mask_rcnn_loss(pred_mask_logits, instances, vis_period=0):
             vis_mask = torch.stack([vis_mask] * 3, axis=0)
             storage.put_image(name + f" ({idx})", vis_mask)
 
-    mask_loss = F.binary_cross_entropy_with_logits(pred_mask_logits, gt_masks, reduction="mean")
+    mask_loss = F.binary_cross_entropy_with_logits(
+        pred_mask_logits, gt_masks, reduction="mean"
+    )
     return mask_loss
 
 
@@ -199,7 +205,9 @@ class MaskRCNNConvUpsampleHead(BaseMaskRCNNHead):
     """
 
     @configurable
-    def __init__(self, input_shape: ShapeSpec, *, num_classes, conv_dims, conv_norm="", **kwargs):
+    def __init__(
+        self, input_shape: ShapeSpec, *, num_classes, conv_dims, conv_norm="", **kwargs
+    ):
         """
         NOTE: this interface is experimental.
 
@@ -237,7 +245,9 @@ class MaskRCNNConvUpsampleHead(BaseMaskRCNNHead):
         )
         cur_channels = conv_dims[-1]
 
-        self.predictor = Conv2d(cur_channels, num_classes, kernel_size=1, stride=1, padding=0)
+        self.predictor = Conv2d(
+            cur_channels, num_classes, kernel_size=1, stride=1, padding=0
+        )
 
         for layer in self.conv_norm_relus + [self.deconv]:
             weight_init.c2_msra_fill(layer)

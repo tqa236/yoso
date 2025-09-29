@@ -21,8 +21,16 @@ from utils.transforms import get_affine_transform
 
 
 class CropDataSet(data.Dataset):
-    def __init__(self, root, split_name, crop_size=[473, 473], scale_factor=0.25,
-                 rotation_factor=30, ignore_label=255, transform=None):
+    def __init__(
+        self,
+        root,
+        split_name,
+        crop_size=[473, 473],
+        scale_factor=0.25,
+        rotation_factor=30,
+        ignore_label=255,
+        transform=None,
+    ):
         self.root = root
         self.aspect_ratio = crop_size[1] * 1.0 / crop_size[0]
         self.crop_size = np.asarray(crop_size)
@@ -33,7 +41,7 @@ class CropDataSet(data.Dataset):
         self.transform = transform
         self.split_name = split_name
 
-        list_path = os.path.join(self.root, self.split_name + '.txt')
+        list_path = os.path.join(self.root, self.split_name + ".txt")
         train_list = [i_id.strip() for i_id in open(list_path)]
 
         self.train_list = train_list
@@ -60,8 +68,12 @@ class CropDataSet(data.Dataset):
     def __getitem__(self, index):
         train_item = self.train_list[index]
 
-        im_path = os.path.join(self.root, self.split_name + '_images', train_item + '.jpg')
-        parsing_anno_path = os.path.join(self.root, self.split_name + '_segmentations', train_item + '.png')
+        im_path = os.path.join(
+            self.root, self.split_name + "_images", train_item + ".jpg"
+        )
+        parsing_anno_path = os.path.join(
+            self.root, self.split_name + "_segmentations", train_item + ".png"
+        )
 
         im = cv2.imread(im_path, cv2.IMREAD_COLOR)
         h, w, _ = im.shape
@@ -71,13 +83,17 @@ class CropDataSet(data.Dataset):
         person_center, s = self._box2cs([0, 0, w - 1, h - 1])
         r = 0
 
-        if self.split_name != 'test':
+        if self.split_name != "test":
             # Get pose annotation
             parsing_anno = cv2.imread(parsing_anno_path, cv2.IMREAD_GRAYSCALE)
             sf = self.scale_factor
             rf = self.rotation_factor
             s = s * np.clip(np.random.randn() * sf + 1, 1 - sf, 1 + sf)
-            r = np.clip(np.random.randn() * rf, -rf * 2, rf * 2) if random.random() <= 0.6 else 0
+            r = (
+                np.clip(np.random.randn() * rf, -rf * 2, rf * 2)
+                if random.random() <= 0.6
+                else 0
+            )
 
             if random.random() <= self.flip_prob:
                 im = im[:, ::-1, :]
@@ -98,21 +114,22 @@ class CropDataSet(data.Dataset):
             (int(self.crop_size[1]), int(self.crop_size[0])),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(0, 0, 0))
+            borderValue=(0, 0, 0),
+        )
 
         if self.transform:
             input = self.transform(input)
 
         meta = {
-            'name': train_item,
-            'center': person_center,
-            'height': h,
-            'width': w,
-            'scale': s,
-            'rotation': r
+            "name": train_item,
+            "center": person_center,
+            "height": h,
+            "width": w,
+            "scale": s,
+            "rotation": r,
         }
 
-        if self.split_name == 'val' or self.split_name == 'test':
+        if self.split_name == "val" or self.split_name == "test":
             return input, meta
         else:
             label_parsing = cv2.warpAffine(
@@ -121,7 +138,8 @@ class CropDataSet(data.Dataset):
                 (int(self.crop_size[1]), int(self.crop_size[0])),
                 flags=cv2.INTER_NEAREST,
                 borderMode=cv2.BORDER_CONSTANT,
-                borderValue=(255))
+                borderValue=(255),
+            )
 
             label_parsing = torch.from_numpy(label_parsing)
 
@@ -129,7 +147,14 @@ class CropDataSet(data.Dataset):
 
 
 class CropDataValSet(data.Dataset):
-    def __init__(self, root, split_name='crop_pic', crop_size=[473, 473], transform=None, flip=False):
+    def __init__(
+        self,
+        root,
+        split_name="crop_pic",
+        crop_size=[473, 473],
+        transform=None,
+        flip=False,
+    ):
         self.root = root
         self.crop_size = crop_size
         self.transform = transform
@@ -139,7 +164,7 @@ class CropDataValSet(data.Dataset):
         self.aspect_ratio = crop_size[1] * 1.0 / crop_size[0]
         self.crop_size = np.asarray(crop_size)
 
-        list_path = os.path.join(self.root, self.split_name + '.txt')
+        list_path = os.path.join(self.root, self.split_name + ".txt")
         val_list = [i_id.strip() for i_id in open(list_path)]
 
         self.val_list = val_list
@@ -167,7 +192,7 @@ class CropDataValSet(data.Dataset):
     def __getitem__(self, index):
         val_item = self.val_list[index]
         # Load training image
-        im_path = os.path.join(self.root, self.split_name, val_item + '.jpg')
+        im_path = os.path.join(self.root, self.split_name, val_item + ".jpg")
         im = cv2.imread(im_path, cv2.IMREAD_COLOR)
         h, w, _ = im.shape
         # Get person center and scale
@@ -180,7 +205,8 @@ class CropDataValSet(data.Dataset):
             (int(self.crop_size[1]), int(self.crop_size[0])),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(0, 0, 0))
+            borderValue=(0, 0, 0),
+        )
         input = self.transform(input)
         flip_input = input.flip(dims=[-1])
         if self.flip:
@@ -189,12 +215,12 @@ class CropDataValSet(data.Dataset):
             batch_input_im = input
 
         meta = {
-            'name': val_item,
-            'center': person_center,
-            'height': h,
-            'width': w,
-            'scale': s,
-            'rotation': r
+            "name": val_item,
+            "center": person_center,
+            "height": h,
+            "width": w,
+            "scale": s,
+            "rotation": r,
         }
 
         return batch_input_im, meta

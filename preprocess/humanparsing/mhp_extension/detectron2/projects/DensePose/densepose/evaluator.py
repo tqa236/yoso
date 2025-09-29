@@ -86,7 +86,9 @@ class DensePoseCOCOEvaluator(DatasetEvaluator):
 
         self._logger.info("Evaluating predictions ...")
         res = OrderedDict()
-        results_gps, results_gpsm = _evaluate_predictions_on_coco(self._coco_api, predictions)
+        results_gps, results_gpsm = _evaluate_predictions_on_coco(
+            self._coco_api, predictions
+        )
         res["densepose_gps"] = results_gps
         res["densepose_gpsm"] = results_gpsm
         return res
@@ -131,28 +133,38 @@ def _evaluate_predictions_on_coco(coco_gt, coco_results):
     coco_dt = coco_gt.loadRes(coco_results)
     results_gps = _evaluate_predictions_on_coco_gps(coco_gt, coco_dt, metrics)
     logger.info(
-        "Evaluation results for densepose, GPS metric: \n" + create_small_table(results_gps)
+        "Evaluation results for densepose, GPS metric: \n"
+        + create_small_table(results_gps)
     )
     results_gpsm = _evaluate_predictions_on_coco_gpsm(coco_gt, coco_dt, metrics)
     logger.info(
-        "Evaluation results for densepose, GPSm metric: \n" + create_small_table(results_gpsm)
+        "Evaluation results for densepose, GPSm metric: \n"
+        + create_small_table(results_gpsm)
     )
     return results_gps, results_gpsm
 
 
 def _evaluate_predictions_on_coco_gps(coco_gt, coco_dt, metrics):
-    coco_eval = DensePoseCocoEval(coco_gt, coco_dt, "densepose", dpEvalMode=DensePoseEvalMode.GPS)
+    coco_eval = DensePoseCocoEval(
+        coco_gt, coco_dt, "densepose", dpEvalMode=DensePoseEvalMode.GPS
+    )
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
-    results = {metric: float(coco_eval.stats[idx] * 100) for idx, metric in enumerate(metrics)}
+    results = {
+        metric: float(coco_eval.stats[idx] * 100) for idx, metric in enumerate(metrics)
+    }
     return results
 
 
 def _evaluate_predictions_on_coco_gpsm(coco_gt, coco_dt, metrics):
-    coco_eval = DensePoseCocoEval(coco_gt, coco_dt, "densepose", dpEvalMode=DensePoseEvalMode.GPSM)
+    coco_eval = DensePoseCocoEval(
+        coco_gt, coco_dt, "densepose", dpEvalMode=DensePoseEvalMode.GPSM
+    )
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
-    results = {metric: float(coco_eval.stats[idx] * 100) for idx, metric in enumerate(metrics)}
+    results = {
+        metric: float(coco_eval.stats[idx] * 100) for idx, metric in enumerate(metrics)
+    }
     return results

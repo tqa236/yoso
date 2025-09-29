@@ -67,7 +67,10 @@ class HRFPN(Backbone):
 
         if self.share_conv:
             self.fpn_conv = nn.Conv2d(
-                in_channels=out_channels, out_channels=out_channels, kernel_size=3, padding=1
+                in_channels=out_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                padding=1,
             )
         else:
             self.fpn_conv = nn.ModuleList()
@@ -105,7 +108,9 @@ class HRFPN(Backbone):
         for i in range(self.n_out_features):
             self.reduction_pooling_conv.append(
                 nn.Sequential(
-                    nn.Conv2d(sum(in_channels), out_channels, kernel_size=2**i, stride=2**i),
+                    nn.Conv2d(
+                        sum(in_channels), out_channels, kernel_size=2**i, stride=2**i
+                    ),
                     nn.BatchNorm2d(out_channels, momentum=0.1),
                     nn.ReLU(inplace=True),
                 )
@@ -122,7 +127,9 @@ class HRFPN(Backbone):
 
         for i in range(self.n_out_features):
             self._out_features.append("p%d" % (i + 1))
-            self._out_feature_channels.update({self._out_features[-1]: self.out_channels})
+            self._out_feature_channels.update(
+                {self._out_features[-1]: self.out_channels}
+            )
             self._out_feature_strides.update({self._out_features[-1]: 2 ** (i + 2)})
 
     # default init_weights for conv(msra) and norm in ConvModule
@@ -163,7 +170,6 @@ class HRFPN(Backbone):
 
 @BACKBONE_REGISTRY.register()
 def build_hrfpn_backbone(cfg, input_shape: ShapeSpec) -> HRFPN:
-
     in_channels = cfg.MODEL.HRNET.STAGE4.NUM_CHANNELS
     in_features = ["p%d" % (i + 1) for i in range(cfg.MODEL.HRNET.STAGE4.NUM_BRANCHES)]
     n_out_features = len(cfg.MODEL.ROI_HEADS.IN_FEATURES)

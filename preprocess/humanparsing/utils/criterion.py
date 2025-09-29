@@ -23,8 +23,15 @@ NUM_CLASSES = 20
 
 
 class CriterionAll(nn.Module):
-    def __init__(self, use_class_weight=False, ignore_index=255, lambda_1=1, lambda_2=1, lambda_3=1,
-                 num_classes=20):
+    def __init__(
+        self,
+        use_class_weight=False,
+        ignore_index=255,
+        lambda_1=1,
+        lambda_2=1,
+        lambda_3=1,
+        num_classes=20,
+    ):
         super(CriterionAll, self).__init__()
         self.ignore_index = ignore_index
         self.use_class_weight = use_class_weight
@@ -62,42 +69,64 @@ class CriterionAll(nn.Module):
         # loss for segmentation
         preds_parsing = preds[0]
         for pred_parsing in preds_parsing:
-            scale_pred = F.interpolate(input=pred_parsing, size=(h, w),
-                                       mode='bilinear', align_corners=True)
+            scale_pred = F.interpolate(
+                input=pred_parsing, size=(h, w), mode="bilinear", align_corners=True
+            )
 
             loss += 0.5 * self.lamda_1 * self.lovasz(scale_pred, target[0])
             if target[2] is None:
                 loss += 0.5 * self.lamda_1 * self.criterion(scale_pred, target[0])
             else:
-                soft_scale_pred = F.interpolate(input=target[2], size=(h, w),
-                                                mode='bilinear', align_corners=True)
-                soft_scale_pred = moving_average(soft_scale_pred, to_one_hot(target[0], num_cls=self.num_classes),
-                                                 1.0 / (cycle_n + 1.0))
-                loss += 0.5 * self.lamda_1 * self.kldiv(scale_pred, soft_scale_pred, target[0])
+                soft_scale_pred = F.interpolate(
+                    input=target[2], size=(h, w), mode="bilinear", align_corners=True
+                )
+                soft_scale_pred = moving_average(
+                    soft_scale_pred,
+                    to_one_hot(target[0], num_cls=self.num_classes),
+                    1.0 / (cycle_n + 1.0),
+                )
+                loss += (
+                    0.5
+                    * self.lamda_1
+                    * self.kldiv(scale_pred, soft_scale_pred, target[0])
+                )
 
         # loss for edge
         preds_edge = preds[1]
         for pred_edge in preds_edge:
-            scale_pred = F.interpolate(input=pred_edge, size=(h, w),
-                                       mode='bilinear', align_corners=True)
+            scale_pred = F.interpolate(
+                input=pred_edge, size=(h, w), mode="bilinear", align_corners=True
+            )
             if target[3] is None:
-                loss += self.lamda_2 * F.cross_entropy(scale_pred, target[1],
-                                                       weights.cuda(), ignore_index=self.ignore_index)
+                loss += self.lamda_2 * F.cross_entropy(
+                    scale_pred,
+                    target[1],
+                    weights.cuda(),
+                    ignore_index=self.ignore_index,
+                )
             else:
-                soft_scale_edge = F.interpolate(input=target[3], size=(h, w),
-                                                mode='bilinear', align_corners=True)
-                soft_scale_edge = moving_average(soft_scale_edge, to_one_hot(target[1], num_cls=2),
-                                                 1.0 / (cycle_n + 1.0))
-                loss += self.lamda_2 * self.kldiv(scale_pred, soft_scale_edge, target[0])
+                soft_scale_edge = F.interpolate(
+                    input=target[3], size=(h, w), mode="bilinear", align_corners=True
+                )
+                soft_scale_edge = moving_average(
+                    soft_scale_edge,
+                    to_one_hot(target[1], num_cls=2),
+                    1.0 / (cycle_n + 1.0),
+                )
+                loss += self.lamda_2 * self.kldiv(
+                    scale_pred, soft_scale_edge, target[0]
+                )
 
         # consistency regularization
         preds_parsing = preds[0]
         preds_edge = preds[1]
         for pred_parsing in preds_parsing:
-            scale_pred = F.interpolate(input=pred_parsing, size=(h, w),
-                                       mode='bilinear', align_corners=True)
-            scale_edge = F.interpolate(input=preds_edge[0], size=(h, w),
-                                       mode='bilinear', align_corners=True)
+            scale_pred = F.interpolate(
+                input=pred_parsing, size=(h, w), mode="bilinear", align_corners=True
+            )
+            scale_edge = F.interpolate(
+                input=preds_edge[0], size=(h, w), mode="bilinear", align_corners=True
+            )
             loss += self.lamda_3 * self.reg(scale_pred, scale_edge, target[0])
 
         return loss

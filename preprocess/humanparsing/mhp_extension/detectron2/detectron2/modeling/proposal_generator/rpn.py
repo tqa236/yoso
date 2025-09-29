@@ -61,11 +61,17 @@ class StandardRPNHead(nn.Module):
         """
         super().__init__()
         # 3x3 conv for the hidden representation
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv2d(
+            in_channels, in_channels, kernel_size=3, stride=1, padding=1
+        )
         # 1x1 conv for predicting objectness logits
-        self.objectness_logits = nn.Conv2d(in_channels, num_anchors, kernel_size=1, stride=1)
+        self.objectness_logits = nn.Conv2d(
+            in_channels, num_anchors, kernel_size=1, stride=1
+        )
         # 1x1 conv for predicting box2box transform deltas
-        self.anchor_deltas = nn.Conv2d(in_channels, num_anchors * box_dim, kernel_size=1, stride=1)
+        self.anchor_deltas = nn.Conv2d(
+            in_channels, num_anchors * box_dim, kernel_size=1, stride=1
+        )
 
         for l in [self.conv, self.objectness_logits, self.anchor_deltas]:
             nn.init.normal_(l.weight, std=0.01)
@@ -83,10 +89,14 @@ class StandardRPNHead(nn.Module):
         anchor_generator = build_anchor_generator(cfg, input_shape)
         num_anchors = anchor_generator.num_anchors
         box_dim = anchor_generator.box_dim
-        assert (
-            len(set(num_anchors)) == 1
-        ), "Each level must have the same number of anchors per spatial position"
-        return {"in_channels": in_channels, "num_anchors": num_anchors[0], "box_dim": box_dim}
+        assert len(set(num_anchors)) == 1, (
+            "Each level must have the same number of anchors per spatial position"
+        )
+        return {
+            "in_channels": in_channels,
+            "num_anchors": num_anchors[0],
+            "box_dim": box_dim,
+        }
 
     def forward(self, features):
         """
@@ -143,9 +153,13 @@ class RPN(nn.Module):
         self.anchor_generator = build_anchor_generator(
             cfg, [input_shape[f] for f in self.in_features]
         )
-        self.box2box_transform = Box2BoxTransform(weights=cfg.MODEL.RPN.BBOX_REG_WEIGHTS)
+        self.box2box_transform = Box2BoxTransform(
+            weights=cfg.MODEL.RPN.BBOX_REG_WEIGHTS
+        )
         self.anchor_matcher = Matcher(
-            cfg.MODEL.RPN.IOU_THRESHOLDS, cfg.MODEL.RPN.IOU_LABELS, allow_low_quality_matches=True
+            cfg.MODEL.RPN.IOU_THRESHOLDS,
+            cfg.MODEL.RPN.IOU_LABELS,
+            allow_low_quality_matches=True,
         )
         self.rpn_head = build_rpn_head(cfg, [input_shape[f] for f in self.in_features])
 
@@ -168,7 +182,9 @@ class RPN(nn.Module):
         return label
 
     @torch.no_grad()
-    def label_and_sample_anchors(self, anchors: List[Boxes], gt_instances: List[Instances]):
+    def label_and_sample_anchors(
+        self, anchors: List[Boxes], gt_instances: List[Instances]
+    ):
         """
         Args:
             anchors (list[Boxes]): anchors for each feature map.
@@ -199,7 +215,9 @@ class RPN(nn.Module):
             """
 
             match_quality_matrix = retry_if_cuda_oom(pairwise_iou)(gt_boxes_i, anchors)
-            matched_idxs, gt_labels_i = retry_if_cuda_oom(self.anchor_matcher)(match_quality_matrix)
+            matched_idxs, gt_labels_i = retry_if_cuda_oom(self.anchor_matcher)(
+                match_quality_matrix
+            )
             # Matching is memory-expensive and may result in CPU tensors. But the result is small
             gt_labels_i = gt_labels_i.to(device=gt_boxes_i.device)
             del match_quality_matrix
@@ -207,7 +225,9 @@ class RPN(nn.Module):
             if self.boundary_threshold >= 0:
                 # Discard anchors that go out of the boundaries of the image
                 # NOTE: This is legacy functionality that is turned off by default in Detectron2
-                anchors_inside_image = anchors.inside_box(image_size_i, self.boundary_threshold)
+                anchors_inside_image = anchors.inside_box(
+                    image_size_i, self.boundary_threshold
+                )
                 gt_labels_i[~anchors_inside_image] = -1
 
             # A vector of labels (-1, 0, 1) for each anchor

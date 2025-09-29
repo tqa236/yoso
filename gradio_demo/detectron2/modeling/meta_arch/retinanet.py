@@ -123,7 +123,9 @@ class RetinaNet(DenseDetector):
             "backbone": backbone,
             "head": head,
             "anchor_generator": anchor_generator,
-            "box2box_transform": Box2BoxTransform(weights=cfg.MODEL.RETINANET.BBOX_REG_WEIGHTS),
+            "box2box_transform": Box2BoxTransform(
+                weights=cfg.MODEL.RETINANET.BBOX_REG_WEIGHTS
+            ),
             "anchor_matcher": Matcher(
                 cfg.MODEL.RETINANET.IOU_THRESHOLDS,
                 cfg.MODEL.RETINANET.IOU_LABELS,
@@ -155,7 +157,9 @@ class RetinaNet(DenseDetector):
         )
         anchors = self.anchor_generator(features)
         gt_labels, gt_boxes = self.label_anchors(anchors, gt_instances)
-        return self.losses(anchors, pred_logits, gt_labels, pred_anchor_deltas, gt_boxes)
+        return self.losses(
+            anchors, pred_logits, gt_labels, pred_anchor_deltas, gt_boxes
+        )
 
     def losses(self, anchors, pred_logits, gt_labels, pred_anchor_deltas, gt_boxes):
         """
@@ -183,9 +187,9 @@ class RetinaNet(DenseDetector):
         normalizer = self._ema_update("loss_normalizer", max(num_pos_anchors, 1), 100)
 
         # classification and regression loss
-        gt_labels_target = F.one_hot(gt_labels[valid_mask], num_classes=self.num_classes + 1)[
-            :, :-1
-        ]  # no loss for the last (background) class
+        gt_labels_target = F.one_hot(
+            gt_labels[valid_mask], num_classes=self.num_classes + 1
+        )[:, :-1]  # no loss for the last (background) class
         loss_cls = sigmoid_focal_loss_jit(
             cat(pred_logits, dim=1)[valid_mask],
             gt_labels_target.to(pred_logits[0].dtype),
@@ -387,7 +391,12 @@ class RetinaNetHead(nn.Module):
         )
 
         # Initialization
-        for modules in [self.cls_subnet, self.bbox_subnet, self.cls_score, self.bbox_pred]:
+        for modules in [
+            self.cls_subnet,
+            self.bbox_subnet,
+            self.cls_score,
+            self.bbox_pred,
+        ]:
             for layer in modules.modules():
                 if isinstance(layer, nn.Conv2d):
                     torch.nn.init.normal_(layer.weight, mean=0, std=0.01)
@@ -400,9 +409,9 @@ class RetinaNetHead(nn.Module):
     @classmethod
     def from_config(cls, cfg, input_shape: List[ShapeSpec]):
         num_anchors = build_anchor_generator(cfg, input_shape).num_cell_anchors
-        assert (
-            len(set(num_anchors)) == 1
-        ), "Using different number of anchors between levels is not currently supported!"
+        assert len(set(num_anchors)) == 1, (
+            "Using different number of anchors between levels is not currently supported!"
+        )
         num_anchors = num_anchors[0]
 
         return {

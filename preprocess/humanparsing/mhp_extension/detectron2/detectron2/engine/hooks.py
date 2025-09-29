@@ -42,7 +42,9 @@ class CallbackHook(HookBase):
     Create a hook using callback functions provided by the user.
     """
 
-    def __init__(self, *, before_train=None, after_train=None, before_step=None, after_step=None):
+    def __init__(
+        self, *, before_train=None, after_train=None, before_step=None, after_step=None
+    ):
         """
         Each argument is a function that takes one argument: the trainer.
         """
@@ -324,9 +326,9 @@ class EvalHook(HookBase):
         results = self._func()
 
         if results:
-            assert isinstance(
-                results, dict
-            ), "Eval function must return a dict. Got {} instead.".format(results)
+            assert isinstance(results, dict), (
+                "Eval function must return a dict. Got {} instead.".format(results)
+            )
 
             flattened_results = flatten_results_dict(results)
             for k, v in flattened_results.items():
@@ -414,7 +416,9 @@ class PreciseBN(HookBase):
             for num_iter in itertools.count(1):
                 if num_iter % 100 == 0:
                     self._logger.info(
-                        "Running precise-BN ... {}/{} iterations.".format(num_iter, self._num_iter)
+                        "Running precise-BN ... {}/{} iterations.".format(
+                            num_iter, self._num_iter
+                        )
                     )
                 # This way we can reuse the same iterator
                 yield next(self._data_iter)

@@ -12,7 +12,6 @@
 """
 
 import os
-import pdb
 
 import cv2
 import numpy as np
@@ -75,15 +74,16 @@ class SimpleFolderDataset(data.Dataset):
             (int(self.input_size[1]), int(self.input_size[0])),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(0, 0, 0))
+            borderValue=(0, 0, 0),
+        )
 
         input = self.transform(input)
         meta = {
-            'center': person_center,
-            'height': h,
-            'width': w,
-            'scale': s,
-            'rotation': r
+            "center": person_center,
+            "height": h,
+            "width": w,
+            "scale": s,
+            "rotation": r,
         }
 
         return input, meta

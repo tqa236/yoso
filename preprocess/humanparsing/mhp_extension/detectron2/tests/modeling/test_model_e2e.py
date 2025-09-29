@@ -93,7 +93,10 @@ class MaskRCNNE2ETest(ModelE2ETest, unittest.TestCase):
     CONFIG_PATH = "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_1x.yaml"
 
     def test_half_empty_data(self):
-        instances = [get_empty_instance(200, 250), get_regular_bitmask_instances(200, 249)]
+        instances = [
+            get_empty_instance(200, 250),
+            get_regular_bitmask_instances(200, 249),
+        ]
         self._test_train([(200, 250), (200, 249)], instances)
 
     # This test is flaky because in some environment the output features are zero due to relu
@@ -123,7 +126,9 @@ class MaskRCNNE2ETest(ModelE2ETest, unittest.TestCase):
                 "p6": tensor(1, 256, 16, 16),
             }
             props = [Instances((510, 510))]
-            props[0].proposal_boxes = Boxes([[10, 10, 20, 20]]).to(device=self.model.device)
+            props[0].proposal_boxes = Boxes([[10, 10, 20, 20]]).to(
+                device=self.model.device
+            )
             props[0].objectness_logits = torch.tensor([1.0]).reshape(1, 1)
             det, _ = self.model.roi_heads(images, features, props)
             self.assertEqual(len(det[0]), 0)

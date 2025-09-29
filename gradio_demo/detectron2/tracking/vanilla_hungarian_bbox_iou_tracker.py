@@ -88,7 +88,9 @@ class VanillaHungarianBBoxIOUTracker(BaseHungarianTracker):
             "track_iou_threshold": track_iou_threshold,
         }
 
-    def build_cost_matrix(self, instances: Instances, prev_instances: Instances) -> np.ndarray:
+    def build_cost_matrix(
+        self, instances: Instances, prev_instances: Instances
+    ) -> np.ndarray:
         """
         Build the cost matrix for assignment problem
         (https://en.wikipedia.org/wiki/Assignment_problem)
@@ -107,13 +109,18 @@ class VanillaHungarianBBoxIOUTracker(BaseHungarianTracker):
             boxes2=self._prev_instances.pred_boxes,
         )
         bbox_pairs = create_prediction_pairs(
-            instances, self._prev_instances, iou_all, threshold=self._track_iou_threshold
+            instances,
+            self._prev_instances,
+            iou_all,
+            threshold=self._track_iou_threshold,
         )
         # assign large cost value to make sure pair below IoU threshold won't be matched
         cost_matrix = np.full((len(instances), len(prev_instances)), LARGE_COST_VALUE)
         return self.assign_cost_matrix_values(cost_matrix, bbox_pairs)
 
-    def assign_cost_matrix_values(self, cost_matrix: np.ndarray, bbox_pairs: List) -> np.ndarray:
+    def assign_cost_matrix_values(
+        self, cost_matrix: np.ndarray, bbox_pairs: List
+    ) -> np.ndarray:
         """
         Based on IoU for each pair of bbox, assign the associated value in cost matrix
 

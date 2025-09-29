@@ -89,12 +89,18 @@ class InferenceAction(Action):
             img = read_image(file_name, format="BGR")  # predictor expects BGR image.
             with torch.no_grad():
                 outputs = predictor(img)["instances"]
-                cls.execute_on_outputs(context, {"file_name": file_name, "image": img}, outputs)
+                cls.execute_on_outputs(
+                    context, {"file_name": file_name, "image": img}, outputs
+                )
         cls.postexecute(context)
 
     @classmethod
     def setup_config(
-        cls: type, config_fpath: str, model_fpath: str, args: argparse.Namespace, opts: List[str]
+        cls: type,
+        config_fpath: str,
+        model_fpath: str,
+        args: argparse.Namespace,
+        opts: List[str],
     ):
         cfg = get_cfg()
         add_densepose_config(cfg)
@@ -131,7 +137,9 @@ class DumpAction(InferenceAction):
 
     @classmethod
     def add_parser(cls: type, subparsers: argparse._SubParsersAction):
-        parser = subparsers.add_parser(cls.COMMAND, help="Dump model outputs to a file.")
+        parser = subparsers.add_parser(
+            cls.COMMAND, help="Dump model outputs to a file."
+        )
         cls.add_arguments(parser)
         parser.set_defaults(func=cls.execute)
 
@@ -160,7 +168,9 @@ class DumpAction(InferenceAction):
                 boxes_XYWH = BoxMode.convert(
                     result["pred_boxes_XYXY"], BoxMode.XYXY_ABS, BoxMode.XYWH_ABS
                 )
-                result["pred_densepose"] = outputs.get("pred_densepose").to_result(boxes_XYWH)
+                result["pred_densepose"] = outputs.get("pred_densepose").to_result(
+                    boxes_XYWH
+                )
         context["results"].append(result)
 
     @classmethod
@@ -206,8 +216,9 @@ class ShowAction(InferenceAction):
         parser.add_argument(
             "visualizations",
             metavar="<visualizations>",
-            help="Comma separated list of visualizations, possible values: "
-            "[{}]".format(",".join(sorted(cls.VISUALIZERS.keys()))),
+            help="Comma separated list of visualizations, possible values: [{}]".format(
+                ",".join(sorted(cls.VISUALIZERS.keys()))
+            ),
         )
         parser.add_argument(
             "--min_score",
@@ -217,7 +228,11 @@ class ShowAction(InferenceAction):
             help="Minimum detection score to visualize",
         )
         parser.add_argument(
-            "--nms_thresh", metavar="<threshold>", default=None, type=float, help="NMS threshold"
+            "--nms_thresh",
+            metavar="<threshold>",
+            default=None,
+            type=float,
+            help="NMS threshold",
         )
         parser.add_argument(
             "--output",
@@ -228,7 +243,11 @@ class ShowAction(InferenceAction):
 
     @classmethod
     def setup_config(
-        cls: type, config_fpath: str, model_fpath: str, args: argparse.Namespace, opts: List[str]
+        cls: type,
+        config_fpath: str,
+        model_fpath: str,
+        args: argparse.Namespace,
+        opts: List[str],
     ):
         opts.append("MODEL.ROI_HEADS.SCORE_THRESH_TEST")
         opts.append(str(args.min_score))
@@ -295,7 +314,9 @@ class ShowAction(InferenceAction):
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=DOC,
-        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=120),
+        formatter_class=lambda prog: argparse.HelpFormatter(
+            prog, max_help_position=120
+        ),
     )
     parser.set_defaults(func=lambda _: parser.print_help(sys.stdout))
     subparsers = parser.add_subparsers(title="Actions")

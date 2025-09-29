@@ -36,12 +36,18 @@ class PanopticFPN(nn.Module):
         )
 
         self.backbone = build_backbone(cfg)
-        self.proposal_generator = build_proposal_generator(cfg, self.backbone.output_shape())
+        self.proposal_generator = build_proposal_generator(
+            cfg, self.backbone.output_shape()
+        )
         self.roi_heads = build_roi_heads(cfg, self.backbone.output_shape())
         self.sem_seg_head = build_sem_seg_head(cfg, self.backbone.output_shape())
 
-        self.register_buffer("pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1))
-        self.register_buffer("pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1))
+        self.register_buffer(
+            "pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1)
+        )
+        self.register_buffer(
+            "pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1)
+        )
 
     @property
     def device(self):
@@ -84,7 +90,9 @@ class PanopticFPN(nn.Module):
         if "sem_seg" in batched_inputs[0]:
             gt_sem_seg = [x["sem_seg"].to(self.device) for x in batched_inputs]
             gt_sem_seg = ImageList.from_tensors(
-                gt_sem_seg, self.backbone.size_divisibility, self.sem_seg_head.ignore_value
+                gt_sem_seg,
+                self.backbone.size_divisibility,
+                self.sem_seg_head.ignore_value,
             ).tensor
         else:
             gt_sem_seg = None
@@ -95,7 +103,9 @@ class PanopticFPN(nn.Module):
         else:
             gt_instances = None
         if self.proposal_generator:
-            proposals, proposal_losses = self.proposal_generator(images, features, gt_instances)
+            proposals, proposal_losses = self.proposal_generator(
+                images, features, gt_instances
+            )
         detector_results, detector_losses = self.roi_heads(
             images, features, proposals, gt_instances
         )
@@ -103,7 +113,9 @@ class PanopticFPN(nn.Module):
         if self.training:
             losses = {}
             losses.update(sem_seg_losses)
-            losses.update({k: v * self.instance_loss_weight for k, v in detector_losses.items()})
+            losses.update(
+                {k: v * self.instance_loss_weight for k, v in detector_losses.items()}
+            )
             losses.update(proposal_losses)
             return losses
 
@@ -160,7 +172,9 @@ def combine_semantic_and_instance_outputs(
     current_segment_id = 0
     segments_info = []
 
-    instance_masks = instance_results.pred_masks.to(dtype=torch.bool, device=panoptic_seg.device)
+    instance_masks = instance_results.pred_masks.to(
+        dtype=torch.bool, device=panoptic_seg.device
+    )
 
     # Add instances one-by-one, check for overlaps with existing ones
     for inst_id in sorted_inds:

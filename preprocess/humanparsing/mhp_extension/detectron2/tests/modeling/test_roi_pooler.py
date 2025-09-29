@@ -26,7 +26,7 @@ class TestROIPooler(unittest.TestCase):
     def _test_roialignv2_roialignrotated_match(self, device):
         pooler_resolution = 14
         canonical_level = 4
-        canonical_scale_factor = 2 ** canonical_level
+        canonical_scale_factor = 2**canonical_level
         pooler_scales = (1.0 / canonical_scale_factor,)
         sampling_ratio = 0
 
@@ -42,7 +42,9 @@ class TestROIPooler(unittest.TestCase):
         rois_rotated = []
         for _ in range(N):
             boxes = self._rand_boxes(
-                num_boxes=N_rois, x_max=W * canonical_scale_factor, y_max=H * canonical_scale_factor
+                num_boxes=N_rois,
+                x_max=W * canonical_scale_factor,
+                y_max=H * canonical_scale_factor,
             )
 
             rotated_boxes = torch.zeros(N_rois, 5)

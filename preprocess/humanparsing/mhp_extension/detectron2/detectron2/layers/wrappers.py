@@ -62,14 +62,14 @@ class Conv2d(torch.nn.Conv2d):
     def forward(self, x):
         if x.numel() == 0 and self.training:
             # https://github.com/pytorch/pytorch/issues/12013
-            assert not isinstance(
-                self.norm, torch.nn.SyncBatchNorm
-            ), "SyncBatchNorm does not support empty inputs!"
+            assert not isinstance(self.norm, torch.nn.SyncBatchNorm), (
+                "SyncBatchNorm does not support empty inputs!"
+            )
 
         if x.numel() == 0 and TORCH_VERSION <= (1, 4):
-            assert not isinstance(
-                self.norm, torch.nn.GroupNorm
-            ), "GroupNorm does not support empty inputs in PyTorch <=1.4!"
+            assert not isinstance(self.norm, torch.nn.GroupNorm), (
+                "GroupNorm does not support empty inputs in PyTorch <=1.4!"
+            )
             # When input is empty, we want to return a empty tensor with "correct" shape,
             # So that the following operations will not panic
             # if they check for the shape of the tensor.
@@ -77,7 +77,11 @@ class Conv2d(torch.nn.Conv2d):
             output_shape = [
                 (i + 2 * p - (di * (k - 1) + 1)) // s + 1
                 for i, p, di, k, s in zip(
-                    x.shape[-2:], self.padding, self.dilation, self.kernel_size, self.stride
+                    x.shape[-2:],
+                    self.padding,
+                    self.dilation,
+                    self.kernel_size,
+                    self.stride,
                 )
             ]
             output_shape = [x.shape[0], self.weight.shape[0]] + output_shape
@@ -178,7 +182,9 @@ else:
             return x
 
 
-def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corners=None):
+def interpolate(
+    input, size=None, scale_factor=None, mode="nearest", align_corners=None
+):
     """
     A wrapper around :func:`torch.nn.functional.interpolate` to support zero-size tensor.
     """
@@ -208,7 +214,9 @@ def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corne
             return size
         scale_factors = _ntuple(dim)(scale_factor)
         # math.floor might return float in py2.7
-        return [int(math.floor(input.size(i + 2) * scale_factors[i])) for i in range(dim)]
+        return [
+            int(math.floor(input.size(i + 2) * scale_factors[i])) for i in range(dim)
+        ]
 
     output_shape = tuple(_output_size(2))
     output_shape = input.shape[:-2] + output_shape

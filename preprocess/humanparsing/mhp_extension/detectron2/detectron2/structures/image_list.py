@@ -49,7 +49,9 @@ class ImageList(object):
 
     @staticmethod
     def from_tensors(
-        tensors: Sequence[torch.Tensor], size_divisibility: int = 0, pad_value: float = 0.0
+        tensors: Sequence[torch.Tensor],
+        size_divisibility: int = 0,
+        pad_value: float = 0.0,
     ) -> "ImageList":
         """
         Args:
@@ -89,7 +91,9 @@ class ImageList(object):
         if size_divisibility > 0:
             stride = size_divisibility
             # the last two dims are H,W, both subject to divisibility requirement
-            max_size = torch.cat([max_size[:-2], (max_size[-2:] + (stride - 1)) // stride * stride])
+            max_size = torch.cat(
+                [max_size[:-2], (max_size[-2:] + (stride - 1)) // stride * stride]
+            )
 
         image_sizes = [tuple(im.shape[-2:]) for im in tensors]
 
@@ -97,8 +101,15 @@ class ImageList(object):
             # This seems slightly (2%) faster.
             # TODO: check whether it's faster for multiple images as well
             image_size = image_sizes[0]
-            padding_size = [0, max_size[-1] - image_size[1], 0, max_size[-2] - image_size[0]]
-            if all(x == 0 for x in padding_size):  # https://github.com/pytorch/pytorch/issues/31734
+            padding_size = [
+                0,
+                max_size[-1] - image_size[1],
+                0,
+                max_size[-2] - image_size[0],
+            ]
+            if all(
+                x == 0 for x in padding_size
+            ):  # https://github.com/pytorch/pytorch/issues/31734
                 batched_imgs = tensors[0].unsqueeze(0)
             else:
                 padded = F.pad(tensors[0], padding_size, value=pad_value)

@@ -6,7 +6,6 @@ import math
 import torch
 import torch.nn as nn
 from einops import rearrange
-from einops.layers.torch import Rearrange
 
 
 # FFN
@@ -69,7 +68,9 @@ class PerceiverAttention(nn.Module):
 
         # attention
         scale = 1 / math.sqrt(math.sqrt(self.dim_head))
-        weight = (q * scale) @ (k * scale).transpose(-2, -1)  # More stable with f16 than dividing afterwards
+        weight = (q * scale) @ (k * scale).transpose(
+            -2, -1
+        )  # More stable with f16 than dividing afterwards
         weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
         out = weight @ v
 
@@ -94,7 +95,6 @@ class CrossAttention(nn.Module):
         self.to_v = nn.Linear(dim, inner_dim, bias=False)
         self.to_out = nn.Linear(inner_dim, dim, bias=False)
 
-
     def forward(self, x, x2):
         """
         Args:
@@ -118,7 +118,9 @@ class CrossAttention(nn.Module):
 
         # attention
         scale = 1 / math.sqrt(math.sqrt(self.dim_head))
-        weight = (q * scale) @ (k * scale).transpose(-2, -1)  # More stable with f16 than dividing afterwards
+        weight = (q * scale) @ (k * scale).transpose(
+            -2, -1
+        )  # More stable with f16 than dividing afterwards
         weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
         out = weight @ v
 
@@ -162,11 +164,9 @@ class Resampler(nn.Module):
             )
 
     def forward(self, x):
-
         latents = self.latents.repeat(x.size(0), 1, 1)
 
         x = self.proj_in(x)
-
 
         for attn, ff in self.layers:
             latents = attn(x, latents) + latents
@@ -174,7 +174,6 @@ class Resampler(nn.Module):
 
         latents = self.proj_out(latents)
         return self.norm_out(latents)
-
 
 
 def masked_mean(t, *, dim, mask=None):

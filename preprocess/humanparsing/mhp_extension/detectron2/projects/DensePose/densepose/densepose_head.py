@@ -62,7 +62,9 @@ class DensePoseConfidenceModelConfig:
             uv_confidence=DensePoseUVConfidenceConfig(
                 enabled=cfg.MODEL.ROI_DENSEPOSE_HEAD.UV_CONFIDENCE.ENABLED,
                 epsilon=cfg.MODEL.ROI_DENSEPOSE_HEAD.UV_CONFIDENCE.EPSILON,
-                type=DensePoseUVConfidenceType(cfg.MODEL.ROI_DENSEPOSE_HEAD.UV_CONFIDENCE.TYPE),
+                type=DensePoseUVConfidenceType(
+                    cfg.MODEL.ROI_DENSEPOSE_HEAD.UV_CONFIDENCE.TYPE
+                ),
             )
         )
 
@@ -140,7 +142,12 @@ class ASPPConv(nn.Sequential):
     def __init__(self, in_channels, out_channels, dilation):
         modules = [
             nn.Conv2d(
-                in_channels, out_channels, 3, padding=dilation, dilation=dilation, bias=False
+                in_channels,
+                out_channels,
+                3,
+                padding=dilation,
+                dilation=dilation,
+                bias=False,
             ),
             nn.GroupNorm(32, out_channels),
             nn.ReLU(),
@@ -186,7 +193,7 @@ class ASPP(nn.Module):
         self.project = nn.Sequential(
             nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
             # nn.BatchNorm2d(out_channels),
-            nn.ReLU()
+            nn.ReLU(),
             # nn.Dropout(0.5)
         )
 
@@ -203,7 +210,12 @@ class ASPP(nn.Module):
 # See https://arxiv.org/abs/1711.07971 for details
 class _NonLocalBlockND(nn.Module):
     def __init__(
-        self, in_channels, inter_channels=None, dimension=3, sub_sample=True, bn_layer=True
+        self,
+        in_channels,
+        inter_channels=None,
+        dimension=3,
+        sub_sample=True,
+        bn_layer=True,
     ):
         super(_NonLocalBlockND, self).__init__()
 
@@ -311,7 +323,9 @@ class _NonLocalBlockND(nn.Module):
 
 
 class NONLocalBlock2D(_NonLocalBlockND):
-    def __init__(self, in_channels, inter_channels=None, sub_sample=True, bn_layer=True):
+    def __init__(
+        self, in_channels, inter_channels=None, sub_sample=True, bn_layer=True
+    ):
         super(NONLocalBlock2D, self).__init__(
             in_channels,
             inter_channels=inter_channels,
@@ -333,7 +347,9 @@ class DensePoseV1ConvXHead(nn.Module):
         pad_size = kernel_size // 2
         n_channels = input_channels
         for i in range(self.n_stacked_convs):
-            layer = Conv2d(n_channels, hidden_dim, kernel_size, stride=1, padding=pad_size)
+            layer = Conv2d(
+                n_channels, hidden_dim, kernel_size, stride=1, padding=pad_size
+            )
             layer_name = self._get_layer_name(i)
             self.add_module(layer_name, layer)
             n_channels = hidden_dim
@@ -357,7 +373,6 @@ class DensePoseV1ConvXHead(nn.Module):
 
 class DensePosePredictor(nn.Module):
     def __init__(self, cfg, input_channels):
-
         super(DensePosePredictor, self).__init__()
         dim_in = input_channels
         n_segm_chan = cfg.MODEL.ROI_DENSEPOSE_HEAD.NUM_COARSE_SEGM_CHANNELS
@@ -367,17 +382,31 @@ class DensePosePredictor(nn.Module):
             dim_in, n_segm_chan, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
         )
         self.index_uv_lowres = ConvTranspose2d(
-            dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+            dim_in,
+            dim_out_patches,
+            kernel_size,
+            stride=2,
+            padding=int(kernel_size / 2 - 1),
         )
         self.u_lowres = ConvTranspose2d(
-            dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+            dim_in,
+            dim_out_patches,
+            kernel_size,
+            stride=2,
+            padding=int(kernel_size / 2 - 1),
         )
         self.v_lowres = ConvTranspose2d(
-            dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+            dim_in,
+            dim_out_patches,
+            kernel_size,
+            stride=2,
+            padding=int(kernel_size / 2 - 1),
         )
         self.scale_factor = cfg.MODEL.ROI_DENSEPOSE_HEAD.UP_SCALE
         self.confidence_model_cfg = DensePoseConfidenceModelConfig.from_cfg(cfg)
-        self._initialize_confidence_estimation_layers(cfg, self.confidence_model_cfg, dim_in)
+        self._initialize_confidence_estimation_layers(
+            cfg, self.confidence_model_cfg, dim_in
+        )
         initialize_module_params(self)
 
     def forward(self, head_outputs):
@@ -388,7 +417,10 @@ class DensePosePredictor(nn.Module):
 
         def interp2d(input):
             return interpolate(
-                input, scale_factor=self.scale_factor, mode="bilinear", align_corners=False
+                input,
+                scale_factor=self.scale_factor,
+                mode="bilinear",
+                align_corners=False,
             )
 
         ann_index = interp2d(ann_index_lowres)
@@ -410,24 +442,49 @@ class DensePosePredictor(nn.Module):
         )
 
     def _initialize_confidence_estimation_layers(
-        self, cfg: CfgNode, confidence_model_cfg: DensePoseConfidenceModelConfig, dim_in: int
+        self,
+        cfg: CfgNode,
+        confidence_model_cfg: DensePoseConfidenceModelConfig,
+        dim_in: int,
     ):
         dim_out_patches = cfg.MODEL.ROI_DENSEPOSE_HEAD.NUM_PATCHES + 1
         kernel_size = cfg.MODEL.ROI_DENSEPOSE_HEAD.DECONV_KERNEL
         if confidence_model_cfg.uv_confidence.enabled:
-            if confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.IID_ISO:
+            if (
+                confidence_model_cfg.uv_confidence.type
+                == DensePoseUVConfidenceType.IID_ISO
+            ):
                 self.sigma_2_lowres = ConvTranspose2d(
-                    dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+                    dim_in,
+                    dim_out_patches,
+                    kernel_size,
+                    stride=2,
+                    padding=int(kernel_size / 2 - 1),
                 )
-            elif confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.INDEP_ANISO:
+            elif (
+                confidence_model_cfg.uv_confidence.type
+                == DensePoseUVConfidenceType.INDEP_ANISO
+            ):
                 self.sigma_2_lowres = ConvTranspose2d(
-                    dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+                    dim_in,
+                    dim_out_patches,
+                    kernel_size,
+                    stride=2,
+                    padding=int(kernel_size / 2 - 1),
                 )
                 self.kappa_u_lowres = ConvTranspose2d(
-                    dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+                    dim_in,
+                    dim_out_patches,
+                    kernel_size,
+                    stride=2,
+                    padding=int(kernel_size / 2 - 1),
                 )
                 self.kappa_v_lowres = ConvTranspose2d(
-                    dim_in, dim_out_patches, kernel_size, stride=2, padding=int(kernel_size / 2 - 1)
+                    dim_in,
+                    dim_out_patches,
+                    kernel_size,
+                    stride=2,
+                    padding=int(kernel_size / 2 - 1),
                 )
             else:
                 raise ValueError(
@@ -438,12 +495,23 @@ class DensePosePredictor(nn.Module):
         self, confidence_model_cfg, head_outputs, interp2d, ann_index, index_uv
     ):
         sigma_1, sigma_2, kappa_u, kappa_v = None, None, None, None
-        sigma_1_lowres, sigma_2_lowres, kappa_u_lowres, kappa_v_lowres = None, None, None, None
+        sigma_1_lowres, sigma_2_lowres, kappa_u_lowres, kappa_v_lowres = (
+            None,
+            None,
+            None,
+            None,
+        )
         if confidence_model_cfg.uv_confidence.enabled:
-            if confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.IID_ISO:
+            if (
+                confidence_model_cfg.uv_confidence.type
+                == DensePoseUVConfidenceType.IID_ISO
+            ):
                 sigma_2_lowres = self.sigma_2_lowres(head_outputs)
                 sigma_2 = interp2d(sigma_2_lowres)
-            elif confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.INDEP_ANISO:
+            elif (
+                confidence_model_cfg.uv_confidence.type
+                == DensePoseUVConfidenceType.INDEP_ANISO
+            ):
                 sigma_2_lowres = self.sigma_2_lowres(head_outputs)
                 kappa_u_lowres = self.kappa_u_lowres(head_outputs)
                 kappa_v_lowres = self.kappa_v_lowres(head_outputs)
@@ -486,17 +554,25 @@ class DensePoseDataFilter(object):
             iou = matched_boxlist_iou(gt_boxes, est_boxes)
             iou_select = iou > self.iou_threshold
             proposals_per_image = proposals_per_image[iou_select]
-            assert len(proposals_per_image.gt_boxes) == len(proposals_per_image.proposal_boxes)
+            assert len(proposals_per_image.gt_boxes) == len(
+                proposals_per_image.proposal_boxes
+            )
             # filter out any target without densepose annotation
             gt_densepose = proposals_per_image.gt_densepose
-            assert len(proposals_per_image.gt_boxes) == len(proposals_per_image.gt_densepose)
+            assert len(proposals_per_image.gt_boxes) == len(
+                proposals_per_image.gt_densepose
+            )
             selected_indices = [
                 i for i, dp_target in enumerate(gt_densepose) if dp_target is not None
             ]
             if len(selected_indices) != len(gt_densepose):
                 proposals_per_image = proposals_per_image[selected_indices]
-            assert len(proposals_per_image.gt_boxes) == len(proposals_per_image.proposal_boxes)
-            assert len(proposals_per_image.gt_boxes) == len(proposals_per_image.gt_densepose)
+            assert len(proposals_per_image.gt_boxes) == len(
+                proposals_per_image.proposal_boxes
+            )
+            assert len(proposals_per_image.gt_boxes) == len(
+                proposals_per_image.gt_densepose
+            )
             proposals_filtered.append(proposals_per_image)
         return proposals_filtered
 
@@ -750,7 +826,9 @@ def _resample_data(
     grid_y = grid_h_expanded * dy_expanded + y0_expanded
     grid = torch.stack((grid_x, grid_y), dim=3)
     # resample Z from (N, C, H, W) into (N, C, Hout, Wout)
-    zresampled = F.grid_sample(z, grid, mode=mode, padding_mode=padding_mode, align_corners=True)
+    zresampled = F.grid_sample(
+        z, grid, mode=mode, padding_mode=padding_mode, align_corners=True
+    )
     return zresampled
 
 
@@ -797,7 +875,9 @@ def _extract_single_tensors_from_matches_one_image(
                     s_gt_all.append(dp_gt.segm.unsqueeze(0))
                     bbox_xywh_gt_all.append(box_xywh_gt.view(-1, 4))
                     bbox_xywh_est_all.append(box_xywh_est.view(-1, 4))
-                    i_bbox_k = torch.full_like(dp_gt.i, bbox_with_dp_offset + len(i_with_dp))
+                    i_bbox_k = torch.full_like(
+                        dp_gt.i, bbox_with_dp_offset + len(i_with_dp)
+                    )
                     i_bbox_all.append(i_bbox_k)
                     i_with_dp.append(bbox_global_offset + k)
     return (
@@ -964,20 +1044,23 @@ class IndepAnisotropicGaussianUVLoss(nn.Module):
         # compute $\sigma_i^2$
         sigma2 = F.softplus(sigma_u) + self.sigma_lower_bound
         # compute \|r_i\|^2
-        r_sqnorm2 = kappa_u_est ** 2 + kappa_v_est ** 2
+        r_sqnorm2 = kappa_u_est**2 + kappa_v_est**2
         delta_u = u - target_u
         delta_v = v - target_v
         # compute \|delta_i\|^2
-        delta_sqnorm = delta_u ** 2 + delta_v ** 2
+        delta_sqnorm = delta_u**2 + delta_v**2
         delta_u_r_u = delta_u * kappa_u_est
         delta_v_r_v = delta_v * kappa_v_est
         # compute the scalar product <delta_i, r_i>
         delta_r = delta_u_r_u + delta_v_r_v
         # compute squared scalar product <delta_i, r_i>^2
-        delta_r_sqnorm = delta_r ** 2
+        delta_r_sqnorm = delta_r**2
         denom2 = sigma2 * (sigma2 + r_sqnorm2)
         loss = 0.5 * (
-            self.log2pi + torch.log(denom2) + delta_sqnorm / sigma2 - delta_r_sqnorm / denom2
+            self.log2pi
+            + torch.log(denom2)
+            + delta_sqnorm / sigma2
+            - delta_r_sqnorm / denom2
         )
         return loss.sum()
 
@@ -992,11 +1075,17 @@ class DensePoseLosses(object):
         self.n_segm_chan  = cfg.MODEL.ROI_DENSEPOSE_HEAD.NUM_COARSE_SEGM_CHANNELS
         # fmt: on
         self.confidence_model_cfg = DensePoseConfidenceModelConfig.from_cfg(cfg)
-        if self.confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.IID_ISO:
+        if (
+            self.confidence_model_cfg.uv_confidence.type
+            == DensePoseUVConfidenceType.IID_ISO
+        ):
             self.uv_loss_with_confidences = IIDIsotropicGaussianUVLoss(
                 self.confidence_model_cfg.uv_confidence.epsilon
             )
-        elif self.confidence_model_cfg.uv_confidence.type == DensePoseUVConfidenceType.INDEP_ANISO:
+        elif (
+            self.confidence_model_cfg.uv_confidence.type
+            == DensePoseUVConfidenceType.INDEP_ANISO
+        ):
             self.uv_loss_with_confidences = IndepAnisotropicGaussianUVLoss(
                 self.confidence_model_cfg.uv_confidence.epsilon
             )
@@ -1066,7 +1155,14 @@ class DensePoseLosses(object):
             w_yhi_xlo,
             w_yhi_xhi,
         ) = _grid_sampling_utilities(  # noqa
-            zh, zw, bbox_xywh_est, bbox_xywh_gt, index_gt_all, x_norm, y_norm, index_bbox
+            zh,
+            zw,
+            bbox_xywh_est,
+            bbox_xywh_gt,
+            index_gt_all,
+            x_norm,
+            y_norm,
+            index_bbox,
         )
 
         j_valid_fg = j_valid * (index_gt_all > 0)

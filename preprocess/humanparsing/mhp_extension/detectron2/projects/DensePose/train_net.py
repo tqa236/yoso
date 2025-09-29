@@ -17,7 +17,13 @@ from fvcore.common.file_io import PathManager
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import CfgNode, get_cfg
-from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
+from detectron2.engine import (
+    DefaultTrainer,
+    default_argument_parser,
+    default_setup,
+    hooks,
+    launch,
+)
 from detectron2.evaluation import COCOEvaluator, DatasetEvaluators, verify_results
 from detectron2.modeling import DatasetMapperTTA
 from detectron2.utils.logger import setup_logger
@@ -29,7 +35,11 @@ from densepose import (
     add_densepose_config,
     load_from_cfg,
 )
-from densepose.data import DatasetMapper, build_detection_test_loader, build_detection_train_loader
+from densepose.data import (
+    DatasetMapper,
+    build_detection_test_loader,
+    build_detection_train_loader,
+)
 
 
 class Trainer(DefaultTrainer):
@@ -44,7 +54,9 @@ class Trainer(DefaultTrainer):
 
     @classmethod
     def build_test_loader(cls, cfg: CfgNode, dataset_name):
-        return build_detection_test_loader(cfg, dataset_name, mapper=DatasetMapper(cfg, False))
+        return build_detection_test_loader(
+            cfg, dataset_name, mapper=DatasetMapper(cfg, False)
+        )
 
     @classmethod
     def build_train_loader(cls, cfg: CfgNode):
@@ -57,7 +69,9 @@ class Trainer(DefaultTrainer):
         # Only support some R-CNN models.
         logger.info("Running inference with test-time augmentation ...")
         transform_data = load_from_cfg(cfg)
-        model = DensePoseGeneralizedRCNNWithTTA(cfg, model, transform_data, DatasetMapperTTA(cfg))
+        model = DensePoseGeneralizedRCNNWithTTA(
+            cfg, model, transform_data, DatasetMapperTTA(cfg)
+        )
         evaluators = [
             cls.build_evaluator(
                 cfg, name, output_folder=os.path.join(cfg.OUTPUT_DIR, "inference_TTA")
@@ -78,7 +92,9 @@ def setup(args):
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "densepose" module
-    setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="densepose")
+    setup_logger(
+        output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="densepose"
+    )
     return cfg
 
 

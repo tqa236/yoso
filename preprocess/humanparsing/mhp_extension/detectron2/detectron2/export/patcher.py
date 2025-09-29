@@ -38,7 +38,9 @@ class Caffe2CompatibleConverter(object):
         if issubclass(self.replaceCls, GenericMixin):
             # replaceCls should act as mixin, create a new class on-the-fly
             new_class = type(
-                "{}MixedWith{}".format(self.replaceCls.__name__, module.__class__.__name__),
+                "{}MixedWith{}".format(
+                    self.replaceCls.__name__, module.__class__.__name__
+                ),
                 (self.replaceCls, module.__class__),
                 {},  # {"new_method": lambda self: ...},
             )
@@ -93,7 +95,8 @@ def mock_fastrcnn_outputs_inference(
 @contextlib.contextmanager
 def mock_mask_rcnn_inference(tensor_mode, patched_module, check=True):
     with mock.patch(
-        "{}.mask_rcnn_inference".format(patched_module), side_effect=Caffe2MaskRCNNInference()
+        "{}.mask_rcnn_inference".format(patched_module),
+        side_effect=Caffe2MaskRCNNInference(),
     ) as mocked_func:
         yield
     if check:
@@ -101,7 +104,9 @@ def mock_mask_rcnn_inference(tensor_mode, patched_module, check=True):
 
 
 @contextlib.contextmanager
-def mock_keypoint_rcnn_inference(tensor_mode, patched_module, use_heatmap_max_keypoint, check=True):
+def mock_keypoint_rcnn_inference(
+    tensor_mode, patched_module, use_heatmap_max_keypoint, check=True
+):
     with mock.patch(
         "{}.keypoint_rcnn_inference".format(patched_module),
         side_effect=Caffe2KeypointRCNNInference(use_heatmap_max_keypoint),

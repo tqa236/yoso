@@ -5,11 +5,19 @@ import torch.nn.functional as F
 
 from detectron2.layers import Conv2d, FrozenBatchNorm2d, get_norm
 from detectron2.modeling import BACKBONE_REGISTRY, ResNet, ResNetBlockBase, make_stage
-from detectron2.modeling.backbone.resnet import BasicStem, BottleneckBlock, DeformBottleneckBlock
+from detectron2.modeling.backbone.resnet import (
+    BasicStem,
+    BottleneckBlock,
+    DeformBottleneckBlock,
+)
 
 from .trident_conv import TridentConv
 
-__all__ = ["TridentBottleneckBlock", "make_trident_stage", "build_trident_resnet_backbone"]
+__all__ = [
+    "TridentBottleneckBlock",
+    "make_trident_stage",
+    "build_trident_resnet_backbone",
+]
 
 
 class TridentBottleneckBlock(ResNetBlockBase):
@@ -93,7 +101,9 @@ class TridentBottleneckBlock(ResNetBlockBase):
                 weight_init.c2_msra_fill(layer)
 
     def forward(self, x):
-        num_branch = self.num_branch if self.training or self.test_branch_idx == -1 else 1
+        num_branch = (
+            self.num_branch if self.training or self.test_branch_idx == -1 else 1
+        )
         if not isinstance(x, list):
             x = [x] * num_branch
         out = [self.conv1(b) for b in x]
@@ -170,7 +180,9 @@ def build_trident_resnet_backbone(cfg, input_shape):
     # fmt: on
     assert res5_dilation in {1, 2}, "res5_dilation cannot be {}.".format(res5_dilation)
 
-    num_blocks_per_stage = {50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}[depth]
+    num_blocks_per_stage = {50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}[
+        depth
+    ]
 
     stages = []
 
@@ -193,9 +205,9 @@ def build_trident_resnet_backbone(cfg, input_shape):
             "dilation": dilation,
         }
         if stage_idx == trident_stage_idx:
-            assert not deform_on_per_stage[
-                idx
-            ], "Not support deformable conv in Trident blocks yet."
+            assert not deform_on_per_stage[idx], (
+                "Not support deformable conv in Trident blocks yet."
+            )
             stage_kargs["block_class"] = TridentBottleneckBlock
             stage_kargs["num_branch"] = num_branch
             stage_kargs["dilations"] = branch_dilations

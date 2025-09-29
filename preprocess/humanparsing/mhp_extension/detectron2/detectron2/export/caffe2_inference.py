@@ -7,7 +7,10 @@ import torch
 from caffe2.proto import caffe2_pb2
 from caffe2.python import core
 
-from .caffe2_modeling import META_ARCH_CAFFE2_EXPORT_TYPE_MAP, convert_batched_inputs_to_c2_format
+from .caffe2_modeling import (
+    META_ARCH_CAFFE2_EXPORT_TYPE_MAP,
+    convert_batched_inputs_to_c2_format,
+)
 from .shared import ScopedWS, get_pb_arg_vali, get_pb_arg_vals, infer_device_type
 
 logger = logging.getLogger(__name__)
@@ -45,7 +48,7 @@ class ProtobufModel(torch.nn.Module):
             try:
                 ws.RunNet(self.net.Proto().name)
             except RuntimeError as e:
-                if not str(e) in self._error_msgs:
+                if str(e) not in self._error_msgs:
                     self._error_msgs.add(str(e))
                     logger.warning("Encountered new RuntimeError: \n{}".format(str(e)))
                 logger.warning("Catch the error and use partial results.")
@@ -60,7 +63,10 @@ class ProtobufModel(torch.nn.Module):
                 # Needs to create uninitialized blob to make the net runable.
                 # This is "equivalent" to: ws.RemoveBlob(b) then ws.CreateBlob(b),
                 # but there'no such API.
-                ws.FeedBlob(b, "{}, a C++ native class of type nullptr (uninitialized).".format(b))
+                ws.FeedBlob(
+                    b,
+                    "{}, a C++ native class of type nullptr (uninitialized).".format(b),
+                )
 
         return outputs_dict
 
@@ -85,9 +91,13 @@ class ProtobufDetectionModel(torch.nn.Module):
         self.device = get_pb_arg_vals(predict_net, "device", b"cpu").decode("ascii")
 
         if convert_outputs is None:
-            meta_arch = get_pb_arg_vals(predict_net, "meta_architecture", b"GeneralizedRCNN")
+            meta_arch = get_pb_arg_vals(
+                predict_net, "meta_architecture", b"GeneralizedRCNN"
+            )
             meta_arch = META_ARCH_CAFFE2_EXPORT_TYPE_MAP[meta_arch.decode("ascii")]
-            self._convert_outputs = meta_arch.get_outputs_converter(predict_net, init_net)
+            self._convert_outputs = meta_arch.get_outputs_converter(
+                predict_net, init_net
+            )
         else:
             self._convert_outputs = convert_outputs
 
@@ -105,7 +115,9 @@ class ProtobufDetectionModel(torch.nn.Module):
             predict_net, known_status=input_device_types, device_name_style="pytorch"
         )
         ssa, versions = core.get_ssa(predict_net)
-        versioned_outputs = [(name, versions[name]) for name in predict_net.external_output]
+        versioned_outputs = [
+            (name, versions[name]) for name in predict_net.external_output
+        ]
         output_devices = [device_type_map[outp] for outp in versioned_outputs]
         return output_devices
 
@@ -123,14 +135,20 @@ class ProtobufDetectionModel(torch.nn.Module):
         if any(t.device.type != "cpu" for _, t in c2_inputs.items()):
             output_devices = self._infer_output_devices(c2_inputs)
         else:
-            output_devices = ["cpu" for _ in self.protobuf_model.net.Proto().external_output]
+            output_devices = [
+                "cpu" for _ in self.protobuf_model.net.Proto().external_output
+            ]
 
         def _cast_caffe2_blob_to_torch_tensor(blob, device):
-            return torch.Tensor(blob).to(device) if isinstance(blob, np.ndarray) else None
+            return (
+                torch.Tensor(blob).to(device) if isinstance(blob, np.ndarray) else None
+            )
 
         c2_results = {
             name: _cast_caffe2_blob_to_torch_tensor(c2_results[name], device)
-            for name, device in zip(self.protobuf_model.net.Proto().external_output, output_devices)
+            for name, device in zip(
+                self.protobuf_model.net.Proto().external_output, output_devices
+            )
         }
 
         return self._convert_outputs(batched_inputs, c2_inputs, c2_results)

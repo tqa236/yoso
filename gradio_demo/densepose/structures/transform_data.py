@@ -17,7 +17,6 @@ def normalized_coords_transform(x0, y0, w, h):
 
 
 class DensePoseTransformData:
-
     # Horizontal symmetry label transforms used for horizontal flip
     MASK_LABEL_SYMMETRIES = [0, 1, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 14]
     # fmt: off
@@ -67,5 +66,7 @@ class DensePoseTransformData:
             for i in range(map_src.shape[1]):
                 map_dst.append(torch.from_numpy(map_src[0, i]).to(dtype=torch.float))
             uv_symmetry_map_torch[key] = torch.stack(map_dst, dim=0)
-        transform_data = DensePoseTransformData(uv_symmetry_map_torch, device=torch.device("cpu"))
+        transform_data = DensePoseTransformData(
+            uv_symmetry_map_torch, device=torch.device("cpu")
+        )
         return transform_data

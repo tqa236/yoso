@@ -43,7 +43,12 @@ from detectron2.utils.logger import setup_logger
 from . import hooks
 from .train_loop import SimpleTrainer
 
-__all__ = ["default_argument_parser", "default_setup", "DefaultPredictor", "DefaultTrainer"]
+__all__ = [
+    "default_argument_parser",
+    "default_setup",
+    "DefaultPredictor",
+    "DefaultTrainer",
+]
 
 
 def default_argument_parser(epilog=None):
@@ -70,23 +75,34 @@ Run on multiple machines:
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--config-file", default="", metavar="FILE", help="path to config file")
+    parser.add_argument(
+        "--config-file", default="", metavar="FILE", help="path to config file"
+    )
     parser.add_argument(
         "--resume",
         action="store_true",
         help="whether to attempt to resume from the checkpoint directory",
     )
-    parser.add_argument("--eval-only", action="store_true", help="perform evaluation only")
-    parser.add_argument("--num-gpus", type=int, default=1, help="number of gpus *per machine*")
-    parser.add_argument("--num-machines", type=int, default=1, help="total number of machines")
     parser.add_argument(
-        "--machine-rank", type=int, default=0, help="the rank of this machine (unique per machine)"
+        "--eval-only", action="store_true", help="perform evaluation only"
+    )
+    parser.add_argument(
+        "--num-gpus", type=int, default=1, help="number of gpus *per machine*"
+    )
+    parser.add_argument(
+        "--num-machines", type=int, default=1, help="total number of machines"
+    )
+    parser.add_argument(
+        "--machine-rank",
+        type=int,
+        default=0,
+        help="the rank of this machine (unique per machine)",
     )
 
     # PyTorch still may leave orphan processes in multi-gpu training.
     # Therefore we use a deterministic way to obtain port,
     # so that users are aware of orphan processes by seeing the port occupied.
-    port = 2 ** 15 + 2 ** 14 + hash(os.getuid() if sys.platform != "win32" else 1) % 2 ** 14
+    port = 2**15 + 2**14 + hash(os.getuid() if sys.platform != "win32" else 1) % 2**14
     parser.add_argument(
         "--dist-url",
         default="tcp://127.0.0.1:{}".format(port),
@@ -122,7 +138,11 @@ def default_setup(cfg, args):
     setup_logger(output_dir, distributed_rank=rank, name="fvcore")
     logger = setup_logger(output_dir, distributed_rank=rank)
 
-    logger.info("Rank of current process: {}. World size: {}".format(rank, comm.get_world_size()))
+    logger.info(
+        "Rank of current process: {}. World size: {}".format(
+            rank, comm.get_world_size()
+        )
+    )
     logger.info("Environment info:\n" + collect_env_info())
 
     logger.info("Command line arguments: " + str(args))
@@ -211,7 +231,9 @@ class DefaultPredictor:
                 # whether the model expects BGR inputs or RGB
                 original_image = original_image[:, :, ::-1]
             height, width = original_image.shape[:2]
-            image = self.transform_gen.get_transform(original_image).apply_image(original_image)
+            image = self.transform_gen.get_transform(original_image).apply_image(
+                original_image
+            )
             image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
 
             inputs = {"image": image, "height": height, "width": width}
@@ -308,7 +330,9 @@ class DefaultTrainer(SimpleTrainer):
         Args:
             resume (bool): whether to do resume or not
         """
-        checkpoint = self.checkpointer.resume_or_load(self.cfg.MODEL.WEIGHTS, resume=resume)
+        checkpoint = self.checkpointer.resume_or_load(
+            self.cfg.MODEL.WEIGHTS, resume=resume
+        )
         self.start_iter = checkpoint.get("iteration", -1) if resume else -1
         # The checkpoint stores the training iteration that just finished, thus we start
         # at the next iteration (or iter zero if there's no checkpoint).
@@ -346,7 +370,11 @@ class DefaultTrainer(SimpleTrainer):
         # This is not always the best: if checkpointing has a different frequency,
         # some checkpoints may have more precise statistics than others.
         if comm.is_main_process():
-            ret.append(hooks.PeriodicCheckpointer(self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD))
+            ret.append(
+                hooks.PeriodicCheckpointer(
+                    self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD
+                )
+            )
 
         def test_and_save_results():
             self._last_eval_results = self.test(self.cfg, self.model)
@@ -400,9 +428,9 @@ class DefaultTrainer(SimpleTrainer):
         """
         super().train(self.start_iter, self.max_iter)
         if len(self.cfg.TEST.EXPECTED_RESULTS) and comm.is_main_process():
-            assert hasattr(
-                self, "_last_eval_results"
-            ), "No evaluation results obtained during training!"
+            assert hasattr(self, "_last_eval_results"), (
+                "No evaluation results obtained during training!"
+            )
             verify_results(self.cfg, self._last_eval_results)
             return self._last_eval_results
 
@@ -518,12 +546,14 @@ Alternatively, you can call evaluation functions yourself (see Colab balloon tut
             results_i = inference_on_dataset(model, data_loader, evaluator)
             results[dataset_name] = results_i
             if comm.is_main_process():
-                assert isinstance(
-                    results_i, dict
-                ), "Evaluator must return a dict on the main process. Got {} instead.".format(
-                    results_i
+                assert isinstance(results_i, dict), (
+                    "Evaluator must return a dict on the main process. Got {} instead.".format(
+                        results_i
+                    )
                 )
-                logger.info("Evaluation results for {} in csv format:".format(dataset_name))
+                logger.info(
+                    "Evaluation results for {} in csv format:".format(dataset_name)
+                )
                 print_csv_format(results_i)
 
         if len(results) == 1:

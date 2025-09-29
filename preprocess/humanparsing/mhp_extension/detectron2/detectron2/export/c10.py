@@ -56,8 +56,8 @@ class InstancesList(object):
         self.image_size = self.im_info
 
     def get_fields(self):
-        """ like `get_fields` in the Instances object,
-        but return each field in tensor representations """
+        """like `get_fields` in the Instances object,
+        but return each field in tensor representations"""
         ret = {}
         for k, v in self.batch_extra_fields.items():
             # if isinstance(v, torch.Tensor):
@@ -75,9 +75,11 @@ class InstancesList(object):
     def set(self, name, value):
         data_len = len(value)
         if len(self.batch_extra_fields):
-            assert (
-                len(self) == data_len
-            ), "Adding a field of length {} to a Instances of length {}".format(data_len, len(self))
+            assert len(self) == data_len, (
+                "Adding a field of length {} to a Instances of length {}".format(
+                    data_len, len(self)
+                )
+            )
         self.batch_extra_fields[name] = value
 
     def __setattr__(self, name, val):
@@ -88,7 +90,9 @@ class InstancesList(object):
 
     def __getattr__(self, name):
         if name not in self.batch_extra_fields:
-            raise AttributeError("Cannot find field '{}' in the given Instances!".format(name))
+            raise AttributeError(
+                "Cannot find field '{}' in the given Instances!".format(name)
+            )
         return self.batch_extra_fields[name]
 
     def __len__(self):
@@ -115,7 +119,9 @@ class InstancesList(object):
 
         ret = []
         for i, info in enumerate(instances_list.im_info):
-            instances = Instances(torch.Size([int(info[0].item()), int(info[1].item())]))
+            instances = Instances(
+                torch.Size([int(info[0].item()), int(info[1].item())])
+            )
 
             ids = instances_list.indices == i
             for k, v in instances_list.batch_extra_fields.items():
@@ -169,7 +175,10 @@ class Caffe2RPN(Caffe2Compatible, rpn.RPN):
             im_info = images.image_sizes
         else:
             im_info = torch.Tensor(
-                [[im_sz[0], im_sz[1], torch.Tensor([1.0])] for im_sz in images.image_sizes]
+                [
+                    [im_sz[0], im_sz[1], torch.Tensor([1.0])]
+                    for im_sz in images.image_sizes
+                ]
             ).to(images.tensor.device)
         assert isinstance(im_info, torch.Tensor)
 
@@ -217,16 +226,18 @@ class Caffe2RPN(Caffe2Compatible, rpn.RPN):
             rpn_post_nms_topN = self.post_nms_topk[self.training]
 
             device = rpn_rois_list[0].device
-            input_list = [to_device(x, "cpu") for x in (rpn_rois_list + rpn_roi_probs_list)]
+            input_list = [
+                to_device(x, "cpu") for x in (rpn_rois_list + rpn_roi_probs_list)
+            ]
 
             # TODO remove this after confirming rpn_max_level/rpn_min_level
             # is not needed in CollectRpnProposals.
             feature_strides = list(self.anchor_generator.strides)
             rpn_min_level = int(math.log2(feature_strides[0]))
             rpn_max_level = int(math.log2(feature_strides[-1]))
-            assert (rpn_max_level - rpn_min_level + 1) == len(
-                rpn_rois_list
-            ), "CollectRpnProposals requires continuous levels"
+            assert (rpn_max_level - rpn_min_level + 1) == len(rpn_rois_list), (
+                "CollectRpnProposals requires continuous levels"
+            )
 
             rpn_rois = torch.ops._caffe2.CollectRpnProposals(
                 input_list,
@@ -241,7 +252,9 @@ class Caffe2RPN(Caffe2Compatible, rpn.RPN):
             rpn_rois = to_device(rpn_rois, device)
             rpn_roi_probs = []
 
-        proposals = self.c2_postprocess(im_info, rpn_rois, rpn_roi_probs, self.tensor_mode)
+        proposals = self.c2_postprocess(
+            im_info, rpn_rois, rpn_roi_probs, self.tensor_mode
+        )
         return proposals, {}
 
     @staticmethod
@@ -300,9 +313,9 @@ class Caffe2ROIPooler(Caffe2Compatible, poolers.ROIPooler):
             return out
 
         device = pooler_fmt_boxes.device
-        assert (
-            self.max_level - self.min_level + 1 == 4
-        ), "Currently DistributeFpnProposals only support 4 levels"
+        assert self.max_level - self.min_level + 1 == 4, (
+            "Currently DistributeFpnProposals only support 4 levels"
+        )
         fpn_outputs = torch.ops._caffe2.DistributeFpnProposals(
             to_device(pooler_fmt_boxes, "cpu"),
             roi_canonical_scale=self.canonical_box_size,
@@ -338,7 +351,9 @@ class Caffe2ROIPooler(Caffe2Compatible, poolers.ROIPooler):
             roi_feat_fpn_list.append(roi_feat_fpn)
 
         roi_feat_shuffled = cat(roi_feat_fpn_list, dim=0)
-        roi_feat = torch.ops._caffe2.BatchPermutation(roi_feat_shuffled, rois_idx_restore_int32)
+        roi_feat = torch.ops._caffe2.BatchPermutation(
+            roi_feat_shuffled, rois_idx_restore_int32
+        )
         return roi_feat
 
 
@@ -347,7 +362,7 @@ class Caffe2FastRCNNOutputsInference:
         self.tensor_mode = tensor_mode  # whether the output is caffe2 tensor mode
 
     def __call__(self, box_predictor, predictions, proposals):
-        """ equivalent to FastRCNNOutputLayers.inference """
+        """equivalent to FastRCNNOutputLayers.inference"""
         score_thresh = box_predictor.test_score_thresh
         nms_thresh = box_predictor.test_nms_thresh
         topk_per_image = box_predictor.test_topk_per_image
@@ -372,7 +387,9 @@ class Caffe2FastRCNNOutputsInference:
 
         input_tensor_mode = proposals[0].proposal_boxes.tensor.shape[1] == box_dim + 1
 
-        rois = type(proposals[0].proposal_boxes).cat([p.proposal_boxes for p in proposals])
+        rois = type(proposals[0].proposal_boxes).cat(
+            [p.proposal_boxes for p in proposals]
+        )
         device, dtype = rois.tensor.device, rois.tensor.dtype
         if input_tensor_mode:
             im_info = proposals[0].image_size
@@ -470,7 +487,7 @@ class Caffe2FastRCNNOutputsInference:
 
 class Caffe2MaskRCNNInference:
     def __call__(self, pred_mask_logits, pred_instances):
-        """ equivalent to mask_head.mask_rcnn_inference """
+        """equivalent to mask_head.mask_rcnn_inference"""
         if all(isinstance(x, InstancesList) for x in pred_instances):
             assert len(pred_instances) == 1
             mask_probs_pred = pred_mask_logits.sigmoid()

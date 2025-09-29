@@ -67,7 +67,14 @@ class FrozenBatchNorm2d(nn.Module):
             )
 
     def _load_from_state_dict(
-        self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        self,
+        state_dict,
+        prefix,
+        local_metadata,
+        strict,
+        missing_keys,
+        unexpected_keys,
+        error_msgs,
     ):
         version = local_metadata.get("version", None)
 
@@ -75,22 +82,36 @@ class FrozenBatchNorm2d(nn.Module):
             # No running_mean/var in early versions
             # This will silent the warnings
             if prefix + "running_mean" not in state_dict:
-                state_dict[prefix + "running_mean"] = torch.zeros_like(self.running_mean)
+                state_dict[prefix + "running_mean"] = torch.zeros_like(
+                    self.running_mean
+                )
             if prefix + "running_var" not in state_dict:
                 state_dict[prefix + "running_var"] = torch.ones_like(self.running_var)
 
         if version is not None and version < 3:
             logger = logging.getLogger(__name__)
-            logger.info("FrozenBatchNorm {} is upgraded to version 3.".format(prefix.rstrip(".")))
+            logger.info(
+                "FrozenBatchNorm {} is upgraded to version 3.".format(
+                    prefix.rstrip(".")
+                )
+            )
             # In version < 3, running_var are used without +eps.
             state_dict[prefix + "running_var"] -= self.eps
 
         super()._load_from_state_dict(
-            state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+            state_dict,
+            prefix,
+            local_metadata,
+            strict,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
         )
 
     def __repr__(self):
-        return "FrozenBatchNorm2d(num_features={}, eps={})".format(self.num_features, self.eps)
+        return "FrozenBatchNorm2d(num_features={}, eps={})".format(
+            self.num_features, self.eps
+        )
 
     @classmethod
     def convert_frozen_batchnorm(cls, module):
@@ -142,7 +163,9 @@ def get_norm(norm, out_channels):
         norm = {
             "BN": BatchNorm2d,
             # Fixed in https://github.com/pytorch/pytorch/pull/36382
-            "SyncBN": NaiveSyncBatchNorm if TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm,
+            "SyncBN": NaiveSyncBatchNorm
+            if TORCH_VERSION <= (1, 5)
+            else nn.SyncBatchNorm,
             "FrozenBN": FrozenBatchNorm2d,
             "GN": lambda channels: nn.GroupNorm(32, channels),
             # for debugging:
@@ -210,7 +233,9 @@ class NaiveSyncBatchNorm(BatchNorm2d):
         meansqr = torch.mean(input * input, dim=[0, 2, 3])
 
         if self._stats_mode == "":
-            assert B > 0, 'SyncBatchNorm(stats_mode="") does not support zero batch size.'
+            assert B > 0, (
+                'SyncBatchNorm(stats_mode="") does not support zero batch size.'
+            )
             vec = torch.cat([mean, meansqr], dim=0)
             vec = AllReduce.apply(vec) * (1.0 / dist.get_world_size())
             mean, meansqr = torch.split(vec, C)
@@ -221,13 +246,22 @@ class NaiveSyncBatchNorm(BatchNorm2d):
                 vec = vec + input.sum()  # make sure there is gradient w.r.t input
             else:
                 vec = torch.cat(
-                    [mean, meansqr, torch.ones([1], device=mean.device, dtype=mean.dtype)], dim=0
+                    [
+                        mean,
+                        meansqr,
+                        torch.ones([1], device=mean.device, dtype=mean.dtype),
+                    ],
+                    dim=0,
                 )
             vec = AllReduce.apply(vec * B)
 
             total_batch = vec[-1].detach()
-            momentum = total_batch.clamp(max=1) * self.momentum  # no update if total_batch is 0
-            total_batch = torch.max(total_batch, torch.ones_like(total_batch))  # avoid div-by-zero
+            momentum = (
+                total_batch.clamp(max=1) * self.momentum
+            )  # no update if total_batch is 0
+            total_batch = torch.max(
+                total_batch, torch.ones_like(total_batch)
+            )  # avoid div-by-zero
             mean, meansqr, _ = torch.split(vec / total_batch, C)
 
         var = meansqr - mean * mean

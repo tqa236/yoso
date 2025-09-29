@@ -19,9 +19,9 @@ def get_event_storage():
         The :class:`EventStorage` object that's currently being used.
         Throws an error if no :class:`EventStorage` is currently enabled.
     """
-    assert len(
-        _CURRENT_STORAGE_STACK
-    ), "get_event_storage() has to be called inside a 'with EventStorage(...)' context!"
+    assert len(_CURRENT_STORAGE_STACK), (
+        "get_event_storage() has to be called inside a 'with EventStorage(...)' context!"
+    )
     return _CURRENT_STORAGE_STACK[-1]
 
 
@@ -185,7 +185,9 @@ class CommonMetricPrinter(EventWriter):
         eta_string = None
         try:
             iter_time = storage.history("time").global_avg()
-            eta_seconds = storage.history("time").median(1000) * (self._max_iter - iteration)
+            eta_seconds = storage.history("time").median(1000) * (
+                self._max_iter - iteration
+            )
             storage.put_scalar("eta_seconds", eta_seconds, smoothing_hint=False)
             eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
         except KeyError:
@@ -221,10 +223,16 @@ class CommonMetricPrinter(EventWriter):
                         if "loss" in k
                     ]
                 ),
-                time="time: {:.4f}  ".format(iter_time) if iter_time is not None else "",
-                data_time="data_time: {:.4f}  ".format(data_time) if data_time is not None else "",
+                time="time: {:.4f}  ".format(iter_time)
+                if iter_time is not None
+                else "",
+                data_time="data_time: {:.4f}  ".format(data_time)
+                if data_time is not None
+                else "",
                 lr=lr,
-                memory="max_mem: {:.0f}M".format(max_mem_mb) if max_mem_mb is not None else "",
+                memory="max_mem: {:.0f}M".format(max_mem_mb)
+                if max_mem_mb is not None
+                else "",
             )
         )
 
@@ -285,9 +293,9 @@ class EventStorage:
 
         existing_hint = self._smoothing_hints.get(name)
         if existing_hint is not None:
-            assert (
-                existing_hint == smoothing_hint
-            ), "Scalar {} was put with a different smoothing_hint!".format(name)
+            assert existing_hint == smoothing_hint, (
+                "Scalar {} was put with a different smoothing_hint!".format(name)
+            )
         else:
             self._smoothing_hints[name] = smoothing_hint
 
@@ -316,7 +324,9 @@ class EventStorage:
 
         # Create a histogram with PyTorch
         hist_counts = torch.histc(hist_tensor, bins=bins)
-        hist_edges = torch.linspace(start=ht_min, end=ht_max, steps=bins + 1, dtype=torch.float32)
+        hist_edges = torch.linspace(
+            start=ht_min, end=ht_max, steps=bins + 1, dtype=torch.float32
+        )
 
         # Parameter for the add_histogram_raw function of SummaryWriter
         hist_params = dict(
@@ -325,7 +335,7 @@ class EventStorage:
             max=ht_max,
             num=len(hist_tensor),
             sum=float(hist_tensor.sum()),
-            sum_squares=float(torch.sum(hist_tensor ** 2)),
+            sum_squares=float(torch.sum(hist_tensor**2)),
             bucket_limits=hist_edges[1:].tolist(),
             bucket_counts=hist_counts.tolist(),
             global_step=self._iter,
@@ -367,7 +377,9 @@ class EventStorage:
         """
         result = {}
         for k, v in self._latest_scalars.items():
-            result[k] = self._history[k].median(window_size) if self._smoothing_hints[k] else v
+            result[k] = (
+                self._history[k].median(window_size) if self._smoothing_hints[k] else v
+            )
         return result
 
     def smoothing_hints(self):

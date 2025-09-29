@@ -39,9 +39,9 @@ def roi_mask_point_loss(mask_logits, instances, points_coord):
     Returns:
         point_loss (Tensor): A scalar tensor containing the loss.
     """
-    assert len(instances) == 0 or isinstance(
-        instances[0].gt_masks, BitMasks
-    ), "Point head works with GT in 'bitmask' format only. Set INPUT.MASK_FORMAT to 'bitmask'."
+    assert len(instances) == 0 or isinstance(instances[0].gt_masks, BitMasks), (
+        "Point head works with GT in 'bitmask' format only. Set INPUT.MASK_FORMAT to 'bitmask'."
+    )
     with torch.no_grad():
         cls_agnostic_mask = mask_logits.size(1) == 1
         total_num_masks = mask_logits.size(0)
@@ -51,7 +51,9 @@ def roi_mask_point_loss(mask_logits, instances, points_coord):
         idx = 0
         for instances_per_image in instances:
             if not cls_agnostic_mask:
-                gt_classes_per_image = instances_per_image.gt_classes.to(dtype=torch.int64)
+                gt_classes_per_image = instances_per_image.gt_classes.to(
+                    dtype=torch.int64
+                )
                 gt_classes.append(gt_classes_per_image)
 
             gt_bit_masks = instances_per_image.gt_masks.tensor
@@ -121,14 +123,18 @@ class StandardPointHead(nn.Module):
         fc_dim_in = input_channels + num_classes
         self.fc_layers = []
         for k in range(num_fc):
-            fc = nn.Conv1d(fc_dim_in, fc_dim, kernel_size=1, stride=1, padding=0, bias=True)
+            fc = nn.Conv1d(
+                fc_dim_in, fc_dim, kernel_size=1, stride=1, padding=0, bias=True
+            )
             self.add_module("fc{}".format(k + 1), fc)
             self.fc_layers.append(fc)
             fc_dim_in = fc_dim
             fc_dim_in += num_classes if self.coarse_pred_each_layer else 0
 
         num_mask_classes = 1 if cls_agnostic_mask else num_classes
-        self.predictor = nn.Conv1d(fc_dim_in, num_mask_classes, kernel_size=1, stride=1, padding=0)
+        self.predictor = nn.Conv1d(
+            fc_dim_in, num_mask_classes, kernel_size=1, stride=1, padding=0
+        )
 
         for layer in self.fc_layers:
             weight_init.c2_msra_fill(layer)

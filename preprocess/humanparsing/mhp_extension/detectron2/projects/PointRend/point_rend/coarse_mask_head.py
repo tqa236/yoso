@@ -51,7 +51,13 @@ class CoarseMaskHead(nn.Module):
             self.conv_layers.append(self.reduce_channel_dim_conv)
 
         self.reduce_spatial_dim_conv = Conv2d(
-            conv_dim, conv_dim, kernel_size=2, stride=2, padding=0, bias=True, activation=F.relu
+            conv_dim,
+            conv_dim,
+            kernel_size=2,
+            stride=2,
+            padding=0,
+            bias=True,
+            activation=F.relu,
         )
         self.conv_layers.append(self.reduce_spatial_dim_conv)
 
@@ -65,7 +71,9 @@ class CoarseMaskHead(nn.Module):
             self.fcs.append(fc)
             input_dim = self.fc_dim
 
-        output_dim = self.num_classes * self.output_side_resolution * self.output_side_resolution
+        output_dim = (
+            self.num_classes * self.output_side_resolution * self.output_side_resolution
+        )
 
         self.prediction = nn.Linear(self.fc_dim, output_dim)
         # use normal distribution initialization for mask prediction layer
@@ -88,5 +96,8 @@ class CoarseMaskHead(nn.Module):
         for layer in self.fcs:
             x = F.relu(layer(x))
         return self.prediction(x).view(
-            N, self.num_classes, self.output_side_resolution, self.output_side_resolution
+            N,
+            self.num_classes,
+            self.output_side_resolution,
+            self.output_side_resolution,
         )

@@ -193,7 +193,13 @@ class BilinearInterpolationHelper:
 
 
 def resample_data(
-    z, bbox_xywh_src, bbox_xywh_dst, wout, hout, mode: str = "nearest", padding_mode: str = "zeros"
+    z,
+    bbox_xywh_src,
+    bbox_xywh_dst,
+    wout,
+    hout,
+    mode: str = "nearest",
+    padding_mode: str = "zeros",
 ):
     """
     Args:
@@ -231,7 +237,9 @@ def resample_data(
     grid_y = grid_h_expanded * dy_expanded + y0_expanded
     grid = torch.stack((grid_x, grid_y), dim=3)
     # resample Z from (N, C, H, W) into (N, C, Hout, Wout)
-    zresampled = F.grid_sample(z, grid, mode=mode, padding_mode=padding_mode, align_corners=True)
+    zresampled = F.grid_sample(
+        z, grid, mode=mode, padding_mode=padding_mode, align_corners=True
+    )
     return zresampled
 
 
@@ -329,15 +337,19 @@ class ChartBasedAnnotationsAccumulator(AnnotationsAccumulator):
             instances_one_image (Instances): instances data to accumulate
         """
         boxes_xywh_est = BoxMode.convert(
-            instances_one_image.proposal_boxes.tensor.clone(), BoxMode.XYXY_ABS, BoxMode.XYWH_ABS
+            instances_one_image.proposal_boxes.tensor.clone(),
+            BoxMode.XYXY_ABS,
+            BoxMode.XYWH_ABS,
         )
         boxes_xywh_gt = BoxMode.convert(
-            instances_one_image.gt_boxes.tensor.clone(), BoxMode.XYXY_ABS, BoxMode.XYWH_ABS
+            instances_one_image.gt_boxes.tensor.clone(),
+            BoxMode.XYXY_ABS,
+            BoxMode.XYWH_ABS,
         )
         n_matches = len(boxes_xywh_gt)
-        assert n_matches == len(
-            boxes_xywh_est
-        ), f"Got {len(boxes_xywh_est)} proposal boxes and {len(boxes_xywh_gt)} GT boxes"
+        assert n_matches == len(boxes_xywh_est), (
+            f"Got {len(boxes_xywh_est)} proposal boxes and {len(boxes_xywh_gt)} GT boxes"
+        )
         if not n_matches:
             # no detection - GT matches
             return
@@ -358,7 +370,10 @@ class ChartBasedAnnotationsAccumulator(AnnotationsAccumulator):
             self.nxt_bbox_index += 1
 
     def _do_accumulate(
-        self, box_xywh_gt: torch.Tensor, box_xywh_est: torch.Tensor, dp_gt: DensePoseDataRelative
+        self,
+        box_xywh_gt: torch.Tensor,
+        box_xywh_est: torch.Tensor,
+        dp_gt: DensePoseDataRelative,
     ):
         """
         Accumulate instances data for one image, given that the data is not empty
@@ -407,7 +422,9 @@ class ChartBasedAnnotationsAccumulator(AnnotationsAccumulator):
             else None,
             bbox_xywh_gt=torch.cat(self.bbox_xywh_gt, 0),
             bbox_xywh_est=torch.cat(self.bbox_xywh_est, 0),
-            point_bbox_with_dp_indices=torch.cat(self.point_bbox_with_dp_indices, 0).long(),
+            point_bbox_with_dp_indices=torch.cat(
+                self.point_bbox_with_dp_indices, 0
+            ).long(),
             point_bbox_indices=torch.cat(self.point_bbox_indices, 0).long(),
             bbox_indices=torch.as_tensor(
                 self.bbox_indices, dtype=torch.long, device=self.x_gt[0].device

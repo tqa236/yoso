@@ -25,7 +25,11 @@ class Keypoints:
                 The shape should be (N, K, 3) where N is the number of
                 instances, and K is the number of keypoints per instance.
         """
-        device = keypoints.device if isinstance(keypoints, torch.Tensor) else torch.device("cpu")
+        device = (
+            keypoints.device
+            if isinstance(keypoints, torch.Tensor)
+            else torch.device("cpu")
+        )
         keypoints = torch.as_tensor(keypoints, dtype=torch.float32, device=device)
         assert keypoints.dim() == 3 and keypoints.shape[2] == 3, keypoints.shape
         self.tensor = keypoints
@@ -174,9 +178,9 @@ def heatmaps_to_keypoints(maps: torch.Tensor, rois: torch.Tensor) -> torch.Tenso
 
     for i in range(num_rois):
         outsize = (int(heights_ceil[i]), int(widths_ceil[i]))
-        roi_map = interpolate(maps[[i]], size=outsize, mode="bicubic", align_corners=False).squeeze(
-            0
-        )  # #keypoints x H x W
+        roi_map = interpolate(
+            maps[[i]], size=outsize, mode="bicubic", align_corners=False
+        ).squeeze(0)  # #keypoints x H x W
 
         # softmax over the spatial region
         max_score, _ = roi_map.view(num_keypoints, -1).max(1)
@@ -185,7 +189,9 @@ def heatmaps_to_keypoints(maps: torch.Tensor, rois: torch.Tensor) -> torch.Tenso
         tmp_pool_resolution = (maps[i] - max_score).exp_()
         # Produce scores over the region H x W, but normalize with POOL_H x POOL_W,
         # so that the scores of objects of different absolute sizes will be more comparable
-        roi_map_scores = tmp_full_resolution / tmp_pool_resolution.sum((1, 2), keepdim=True)
+        roi_map_scores = tmp_full_resolution / tmp_pool_resolution.sum(
+            (1, 2), keepdim=True
+        )
 
         w = roi_map.shape[2]
         pos = roi_map.view(num_keypoints, -1).argmax(1)

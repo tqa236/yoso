@@ -72,7 +72,9 @@ class PointRendROIHeads(StandardROIHeads):
         self._feature_scales         = {k: 1.0 / v.stride for k, v in input_shape.items()}
         # fmt: on
 
-        in_channels = np.sum([input_shape[f].channels for f in self.mask_coarse_in_features])
+        in_channels = np.sum(
+            [input_shape[f].channels for f in self.mask_coarse_in_features]
+        )
         self.mask_coarse_head = build_mask_head(
             cfg,
             ShapeSpec(
@@ -98,7 +100,9 @@ class PointRendROIHeads(StandardROIHeads):
         self.mask_point_subdivision_num_points  = cfg.MODEL.POINT_HEAD.SUBDIVISION_NUM_POINTS
         # fmt: on
 
-        in_channels = np.sum([input_shape[f].channels for f in self.mask_point_in_features])
+        in_channels = np.sum(
+            [input_shape[f].channels for f in self.mask_point_in_features]
+        )
         self.mask_point_head = build_point_head(
             cfg, ShapeSpec(channels=in_channels, width=1, height=1)
         )
@@ -126,13 +130,17 @@ class PointRendROIHeads(StandardROIHeads):
             mask_coarse_logits = self._forward_mask_coarse(features, proposal_boxes)
 
             losses = {"loss_mask": mask_rcnn_loss(mask_coarse_logits, proposals)}
-            losses.update(self._forward_mask_point(features, mask_coarse_logits, proposals))
+            losses.update(
+                self._forward_mask_point(features, mask_coarse_logits, proposals)
+            )
             return losses
         else:
             pred_boxes = [x.pred_boxes for x in instances]
             mask_coarse_logits = self._forward_mask_coarse(features, pred_boxes)
 
-            mask_logits = self._forward_mask_point(features, mask_coarse_logits, instances)
+            mask_logits = self._forward_mask_point(
+                features, mask_coarse_logits, instances
+            )
             mask_rcnn_inference(mask_logits, instances)
             return instances
 
@@ -144,7 +152,9 @@ class PointRendROIHeads(StandardROIHeads):
             np.sum(len(x) for x in boxes), self.mask_coarse_side_size, boxes[0].device
         )
         mask_coarse_features_list = [features[k] for k in self.mask_coarse_in_features]
-        features_scales = [self._feature_scales[k] for k in self.mask_coarse_in_features]
+        features_scales = [
+            self._feature_scales[k] for k in self.mask_coarse_in_features
+        ]
         # For regular grids of points, this function is equivalent to `len(features_list)' calls
         # of `ROIAlign` (with `SAMPLING_RATIO=2`), and concat the results.
         mask_features, _ = point_sample_fine_grained_features(
@@ -174,10 +184,14 @@ class PointRendROIHeads(StandardROIHeads):
                     self.mask_point_importance_sample_ratio,
                 )
 
-            fine_grained_features, point_coords_wrt_image = point_sample_fine_grained_features(
-                mask_features_list, features_scales, proposal_boxes, point_coords
+            fine_grained_features, point_coords_wrt_image = (
+                point_sample_fine_grained_features(
+                    mask_features_list, features_scales, proposal_boxes, point_coords
+                )
             )
-            coarse_features = point_sample(mask_coarse_logits, point_coords, align_corners=False)
+            coarse_features = point_sample(
+                mask_coarse_logits, point_coords, align_corners=False
+            )
             point_logits = self.mask_point_head(fine_grained_features, coarse_features)
             return {
                 "loss_mask_point": roi_mask_point_loss(
@@ -214,7 +228,9 @@ class PointRendROIHeads(StandardROIHeads):
                 coarse_features = point_sample(
                     mask_coarse_logits, point_coords, align_corners=False
                 )
-                point_logits = self.mask_point_head(fine_grained_features, coarse_features)
+                point_logits = self.mask_point_head(
+                    fine_grained_features, coarse_features
+                )
 
                 # put mask point predictions to the right places on the upsampled grid.
                 R, C, H, W = mask_logits.shape

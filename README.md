@@ -14,6 +14,7 @@ Time constraints will significantly impact the approach
 - Choose the metrics
 - Model
 - Deployment
+- Refactor the modules to namespaces
 
 ### Metrics
 

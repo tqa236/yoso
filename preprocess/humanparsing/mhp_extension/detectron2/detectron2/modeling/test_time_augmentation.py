@@ -86,14 +86,16 @@ class GeneralizedRCNNWithTTA(nn.Module):
         super().__init__()
         if isinstance(model, DistributedDataParallel):
             model = model.module
-        assert isinstance(
-            model, GeneralizedRCNN
-        ), "TTA is only supported on GeneralizedRCNN. Got a model of type {}".format(type(model))
+        assert isinstance(model, GeneralizedRCNN), (
+            "TTA is only supported on GeneralizedRCNN. Got a model of type {}".format(
+                type(model)
+            )
+        )
         self.cfg = cfg.clone()
         assert not self.cfg.MODEL.KEYPOINT_ON, "TTA for keypoint is not supported yet"
-        assert (
-            not self.cfg.MODEL.LOAD_PROPOSALS
-        ), "TTA for pre-computed proposals is not supported yet"
+        assert not self.cfg.MODEL.LOAD_PROPOSALS, (
+            "TTA for pre-computed proposals is not supported yet"
+        )
 
         self.model = model
 
@@ -128,7 +130,9 @@ class GeneralizedRCNNWithTTA(nn.Module):
             for attr in old.keys():
                 setattr(roi_heads, attr, old[attr])
 
-    def _batch_inference(self, batched_inputs, detected_instances=None, do_postprocess=True):
+    def _batch_inference(
+        self, batched_inputs, detected_instances=None, do_postprocess=True
+    ):
         """
         Execute inference on a list of inputs,
         using batch size = self.batch_size, instead of the length of the list.
@@ -208,9 +212,9 @@ class GeneralizedRCNNWithTTA(nn.Module):
         do_hflip = [k.pop("horiz_flip", False) for k in augmented_inputs]
         heights = [k["height"] for k in augmented_inputs]
         widths = [k["width"] for k in augmented_inputs]
-        assert (
-            len(set(heights)) == 1 and len(set(widths)) == 1
-        ), "Augmented version of the inputs should have the same original resolution!"
+        assert len(set(heights)) == 1 and len(set(widths)) == 1, (
+            "Augmented version of the inputs should have the same original resolution!"
+        )
         height = heights[0]
         width = widths[0]
         aug_vars = {"height": height, "width": width, "do_hflip": do_hflip}
@@ -265,7 +269,9 @@ class GeneralizedRCNNWithTTA(nn.Module):
             pred_boxes.tensor[:, 0::2] *= scale_x
             pred_boxes.tensor[:, 1::2] *= scale_y
             if aug_vars["do_hflip"][idx]:
-                pred_boxes.tensor[:, [0, 2]] = actual_width - pred_boxes.tensor[:, [2, 0]]
+                pred_boxes.tensor[:, [0, 2]] = (
+                    actual_width - pred_boxes.tensor[:, [2, 0]]
+                )
 
             aug_instances = Instances(
                 image_size=(actual_height, actual_width),

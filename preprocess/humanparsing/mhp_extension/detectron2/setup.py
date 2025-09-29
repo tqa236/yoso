@@ -15,7 +15,9 @@ assert torch_ver >= [1, 4], "Requires PyTorch >= 1.4"
 
 
 def get_version():
-    init_py_path = path.join(path.abspath(path.dirname(__file__)), "detectron2", "__init__.py")
+    init_py_path = path.join(
+        path.abspath(path.dirname(__file__)), "detectron2", "__init__.py"
+    )
     init_py = open(init_py_path, "r").readlines()
     version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]
     version = version_line.split("=")[-1].strip().strip("'\"")

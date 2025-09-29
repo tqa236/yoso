@@ -14,7 +14,12 @@ import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog, build_detection_train_loader
-from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch
+from detectron2.engine import (
+    DefaultTrainer,
+    default_argument_parser,
+    default_setup,
+    launch,
+)
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
     CityscapesSemSegEvaluator,
@@ -27,11 +32,22 @@ from detectron2.evaluation import (
 
 from point_rend import SemSegDatasetMapper, add_pointrend_config
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 # Register Custom Dataset
 from detectron2.data.datasets import register_coco_instances
-register_coco_instances("CIHP_train", {}, "/data03/v_xuyunqiu/multi_parsing/data/msrcnn_finetune_annotations/CIHP_train.json", "/data03/v_xuyunqiu/data/instance-level_human_parsing/Training/Images")
-register_coco_instances("CIHP_val", {}, "/data03/v_xuyunqiu/multi_parsing/data/msrcnn_finetune_annotations/CIHP_val.json", "/data03/v_xuyunqiu/data/instance-level_human_parsing/Validation/Images")
+
+register_coco_instances(
+    "CIHP_train",
+    {},
+    "/data03/v_xuyunqiu/multi_parsing/data/msrcnn_finetune_annotations/CIHP_train.json",
+    "/data03/v_xuyunqiu/data/instance-level_human_parsing/Training/Images",
+)
+register_coco_instances(
+    "CIHP_val",
+    {},
+    "/data03/v_xuyunqiu/multi_parsing/data/msrcnn_finetune_annotations/CIHP_val.json",
+    "/data03/v_xuyunqiu/data/instance-level_human_parsing/Validation/Images",
+)
 
 
 class Trainer(DefaultTrainer):
@@ -67,14 +83,14 @@ class Trainer(DefaultTrainer):
                 output_dir=output_folder,
             )
         if evaluator_type == "cityscapes_instance":
-            assert (
-                torch.cuda.device_count() >= comm.get_rank()
-            ), "CityscapesEvaluator currently do not work with multiple machines."
+            assert torch.cuda.device_count() >= comm.get_rank(), (
+                "CityscapesEvaluator currently do not work with multiple machines."
+            )
             return CityscapesInstanceEvaluator(dataset_name)
         if evaluator_type == "cityscapes_sem_seg":
-            assert (
-                torch.cuda.device_count() >= comm.get_rank()
-            ), "CityscapesEvaluator currently do not work with multiple machines."
+            assert torch.cuda.device_count() >= comm.get_rank(), (
+                "CityscapesEvaluator currently do not work with multiple machines."
+            )
             return CityscapesSemSegEvaluator(dataset_name)
         if len(evaluator_list) == 0:
             raise NotImplementedError(

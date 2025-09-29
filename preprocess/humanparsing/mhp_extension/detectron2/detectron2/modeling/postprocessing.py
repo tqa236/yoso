@@ -25,7 +25,10 @@ def detector_postprocess(results, output_height, output_width, mask_threshold=0.
     Returns:
         Instances: the resized output from the model, based on the output resolution
     """
-    scale_x, scale_y = (output_width / results.image_size[1], output_height / results.image_size[0])
+    scale_x, scale_y = (
+        output_width / results.image_size[1],
+        output_height / results.image_size[0],
+    )
     results = Instances((output_height, output_width), **results.get_fields())
 
     if results.has("pred_boxes"):

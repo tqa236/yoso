@@ -7,7 +7,9 @@ from detectron2.structures import Instances
 
 class TestInstancesIndexing(unittest.TestCase):
     def test_int_indexing(self):
-        attr1 = torch.tensor([[0.0, 0.0, 1.0], [0.0, 0.0, 0.5], [0.0, 0.0, 1.0], [0.0, 0.5, 0.5]])
+        attr1 = torch.tensor(
+            [[0.0, 0.0, 1.0], [0.0, 0.0, 0.5], [0.0, 0.0, 1.0], [0.0, 0.5, 0.5]]
+        )
         attr2 = torch.tensor([0.1, 0.2, 0.3, 0.4])
         instances = Instances((100, 100))
         instances.attr1 = attr1

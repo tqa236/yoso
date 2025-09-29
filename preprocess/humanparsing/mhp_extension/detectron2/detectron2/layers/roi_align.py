@@ -17,7 +17,13 @@ class _ROIAlign(Function):
         ctx.input_shape = input.size()
         ctx.aligned = aligned
         output = _C.roi_align_forward(
-            input, roi, spatial_scale, output_size[0], output_size[1], sampling_ratio, aligned
+            input,
+            roi,
+            spatial_scale,
+            output_size[0],
+            output_size[1],
+            sampling_ratio,
+            aligned,
         )
         return output
 
@@ -92,7 +98,12 @@ class ROIAlign(nn.Module):
         """
         assert rois.dim() == 2 and rois.size(1) == 5
         return roi_align(
-            input, rois, self.output_size, self.spatial_scale, self.sampling_ratio, self.aligned
+            input,
+            rois,
+            self.output_size,
+            self.spatial_scale,
+            self.sampling_ratio,
+            self.aligned,
         )
 
     def __repr__(self):

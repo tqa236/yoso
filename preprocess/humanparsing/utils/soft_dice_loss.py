@@ -6,8 +6,8 @@
 @Contact :   peike.li@yahoo.com
 @File    :   soft_dice_loss.py
 @Time    :   8/13/19 5:09 PM
-@Desc    :   
-@License :   This source code is licensed under the license found in the 
+@Desc    :
+@License :   This source code is licensed under the license found in the
              LICENSE file in the root directory of this source tree.
 """
 
@@ -24,7 +24,7 @@ except ImportError:  # py3k
 
 
 def tversky_loss(probas, labels, alpha=0.5, beta=0.5, epsilon=1e-6):
-    '''
+    """
     Tversky loss function.
         probas: [P, C] Variable, class probabilities at each prediction (between 0 and 1)
         labels: [P] Tensor, ground truth labels (between 0 and C - 1)
@@ -33,7 +33,7 @@ def tversky_loss(probas, labels, alpha=0.5, beta=0.5, epsilon=1e-6):
     Same as Jaccord loss when alpha=beta=1.0.
     See `Tversky loss function for image segmentation using 3D fully convolutional deep networks`
     https://arxiv.org/pdf/1706.05721.pdf
-    '''
+    """
     C = probas.size(1)
     losses = []
     for c in list(range(C)):
@@ -60,7 +60,7 @@ def flatten_probas(probas, labels, ignore=255):
     labels = labels.view(-1)
     if ignore is None:
         return probas, labels
-    valid = (labels != ignore)
+    valid = labels != ignore
     vprobas = probas[valid.nonzero().squeeze()]
     vlabels = labels[valid]
     return vprobas, vlabels
@@ -81,8 +81,8 @@ def mean(l, ignore_nan=False, empty=0):
         n = 1
         acc = next(l)
     except StopIteration:
-        if empty == 'raise':
-            raise ValueError('Empty mean')
+        if empty == "raise":
+            raise ValueError("Empty mean")
         return empty
     for n, v in enumerate(l, 2):
         acc += v
@@ -98,7 +98,9 @@ class SoftDiceLoss(nn.Module):
 
     def forward(self, pred, label):
         pred = F.softmax(pred, dim=1)
-        return tversky_loss(*flatten_probas(pred, label, ignore=self.ignore_index), alpha=0.5, beta=0.5)
+        return tversky_loss(
+            *flatten_probas(pred, label, ignore=self.ignore_index), alpha=0.5, beta=0.5
+        )
 
 
 class SoftJaccordLoss(nn.Module):
@@ -108,4 +110,6 @@ class SoftJaccordLoss(nn.Module):
 
     def forward(self, pred, label):
         pred = F.softmax(pred, dim=1)
-        return tversky_loss(*flatten_probas(pred, label, ignore=self.ignore_index), alpha=1.0, beta=1.0)
+        return tversky_loss(
+            *flatten_probas(pred, label, ignore=self.ignore_index), alpha=1.0, beta=1.0
+        )

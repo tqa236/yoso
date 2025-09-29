@@ -22,17 +22,21 @@ class CfgNode(_CfgNode):
 
     # Note that the default value of allow_unsafe is changed to True
     def merge_from_file(self, cfg_filename: str, allow_unsafe: bool = True) -> None:
-        assert PathManager.isfile(cfg_filename), f"Config file '{cfg_filename}' does not exist!"
-        loaded_cfg = _CfgNode.load_yaml_with_base(cfg_filename, allow_unsafe=allow_unsafe)
+        assert PathManager.isfile(cfg_filename), (
+            f"Config file '{cfg_filename}' does not exist!"
+        )
+        loaded_cfg = _CfgNode.load_yaml_with_base(
+            cfg_filename, allow_unsafe=allow_unsafe
+        )
         loaded_cfg = type(self)(loaded_cfg)
 
         # defaults.py needs to import CfgNode
         from .defaults import _C
 
         latest_ver = _C.VERSION
-        assert (
-            latest_ver == self.VERSION
-        ), "CfgNode.merge_from_file is only allowed on a config object of latest version!"
+        assert latest_ver == self.VERSION, (
+            "CfgNode.merge_from_file is only allowed on a config object of latest version!"
+        )
 
         logger = logging.getLogger(__name__)
 
@@ -41,8 +45,10 @@ class CfgNode(_CfgNode):
             from .compat import guess_version
 
             loaded_ver = guess_version(loaded_cfg, cfg_filename)
-        assert loaded_ver <= self.VERSION, "Cannot merge a v{} config into a v{} config.".format(
-            loaded_ver, self.VERSION
+        assert loaded_ver <= self.VERSION, (
+            "Cannot merge a v{} config into a v{} config.".format(
+                loaded_ver, self.VERSION
+            )
         )
 
         if loaded_ver == self.VERSION:
@@ -132,20 +138,26 @@ def configurable(init_func):
         a2 = A(cfg)       # construct with a cfg
         a3 = A(cfg, b=3, c=4)  # construct with extra overwrite
     """
-    assert init_func.__name__ == "__init__", "@configurable should only be used for __init__!"
+    assert init_func.__name__ == "__init__", (
+        "@configurable should only be used for __init__!"
+    )
     if init_func.__module__.startswith("detectron2."):
-        assert (
-            init_func.__doc__ is not None and "experimental" in init_func.__doc__
-        ), f"configurable {init_func} should be marked experimental"
+        assert init_func.__doc__ is not None and "experimental" in init_func.__doc__, (
+            f"configurable {init_func} should be marked experimental"
+        )
 
     @functools.wraps(init_func)
     def wrapped(self, *args, **kwargs):
         try:
             from_config_func = type(self).from_config
         except AttributeError:
-            raise AttributeError("Class with @configurable must have a 'from_config' classmethod.")
+            raise AttributeError(
+                "Class with @configurable must have a 'from_config' classmethod."
+            )
         if not inspect.ismethod(from_config_func):
-            raise TypeError("Class with @configurable must have a 'from_config' classmethod.")
+            raise TypeError(
+                "Class with @configurable must have a 'from_config' classmethod."
+            )
 
         if _called_with_cfg(*args, **kwargs):
             explicit_args = _get_args_from_config(from_config_func, *args, **kwargs)
@@ -172,7 +184,9 @@ def _get_args_from_config(from_config_func, *args, **kwargs):
         param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]
         for param in signature.parameters.values()
     )
-    if support_var_arg:  # forward all arguments to from_config, if from_config accepts them
+    if (
+        support_var_arg
+    ):  # forward all arguments to from_config, if from_config accepts them
         ret = from_config_func(*args, **kwargs)
     else:
         # forward supported arguments to from_config

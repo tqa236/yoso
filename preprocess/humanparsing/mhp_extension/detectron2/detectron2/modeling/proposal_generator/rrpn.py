@@ -81,7 +81,9 @@ def find_top_rrpn_proposals(
 
         topk_proposals.append(topk_proposals_i)
         topk_scores.append(topk_scores_i)
-        level_ids.append(torch.full((num_proposals_i,), level_id, dtype=torch.int64, device=device))
+        level_ids.append(
+            torch.full((num_proposals_i,), level_id, dtype=torch.int64, device=device)
+        )
 
     # 2. Concat all levels together
     topk_scores = cat(topk_scores, dim=1)
@@ -93,7 +95,9 @@ def find_top_rrpn_proposals(
     for n, image_size in enumerate(image_sizes):
         boxes = RotatedBoxes(topk_proposals[n])
         scores_per_img = topk_scores[n]
-        valid_mask = torch.isfinite(boxes.tensor).all(dim=1) & torch.isfinite(scores_per_img)
+        valid_mask = torch.isfinite(boxes.tensor).all(dim=1) & torch.isfinite(
+            scores_per_img
+        )
         if not valid_mask.all():
             boxes = boxes[valid_mask]
             scores_per_img = scores_per_img[valid_mask]
@@ -103,7 +107,11 @@ def find_top_rrpn_proposals(
         keep = boxes.nonempty(threshold=min_box_side_len)
         lvl = level_ids
         if keep.sum().item() != len(boxes):
-            boxes, scores_per_img, lvl = (boxes[keep], scores_per_img[keep], level_ids[keep])
+            boxes, scores_per_img, lvl = (
+                boxes[keep],
+                scores_per_img[keep],
+                level_ids[keep],
+            )
 
         keep = batched_nms_rotated(boxes.tensor, scores_per_img, lvl, nms_thresh)
         # In Detectron1, there was different behavior during training vs. testing.
@@ -130,14 +138,18 @@ class RRPN(RPN):
 
     def __init__(self, cfg, input_shape: Dict[str, ShapeSpec]):
         super().__init__(cfg, input_shape)
-        self.box2box_transform = Box2BoxTransformRotated(weights=cfg.MODEL.RPN.BBOX_REG_WEIGHTS)
+        self.box2box_transform = Box2BoxTransformRotated(
+            weights=cfg.MODEL.RPN.BBOX_REG_WEIGHTS
+        )
         if self.boundary_threshold >= 0:
             raise NotImplementedError(
                 "boundary_threshold is a legacy option not implemented for RRPN."
             )
 
     @torch.no_grad()
-    def label_and_sample_anchors(self, anchors: List[RotatedBoxes], gt_instances: List[Instances]):
+    def label_and_sample_anchors(
+        self, anchors: List[RotatedBoxes], gt_instances: List[Instances]
+    ):
         """
         Args:
             anchors (list[RotatedBoxes]): anchors for each feature map.
@@ -164,8 +176,12 @@ class RRPN(RPN):
             """
             gt_boxes_i: ground-truth boxes for i-th image
             """
-            match_quality_matrix = retry_if_cuda_oom(pairwise_iou_rotated)(gt_boxes_i, anchors)
-            matched_idxs, gt_labels_i = retry_if_cuda_oom(self.anchor_matcher)(match_quality_matrix)
+            match_quality_matrix = retry_if_cuda_oom(pairwise_iou_rotated)(
+                gt_boxes_i, anchors
+            )
+            matched_idxs, gt_labels_i = retry_if_cuda_oom(self.anchor_matcher)(
+                match_quality_matrix
+            )
             # Matching is memory-expensive and may result in CPU tensors. But the result is small
             gt_labels_i = gt_labels_i.to(device=gt_boxes_i.device)
 

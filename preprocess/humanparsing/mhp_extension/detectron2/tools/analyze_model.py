@@ -44,9 +44,12 @@ def do_flop(cfg):
         counts += count
         total_flops.append(sum(count.values()))
     logger.info(
-        "(G)Flops for Each Type of Operators:\n" + str([(k, v / idx) for k, v in counts.items()])
+        "(G)Flops for Each Type of Operators:\n"
+        + str([(k, v / idx) for k, v in counts.items()])
     )
-    logger.info("Total (G)Flops: {}±{}".format(np.mean(total_flops), np.std(total_flops)))
+    logger.info(
+        "Total (G)Flops: {}±{}".format(np.mean(total_flops), np.std(total_flops))
+    )
 
 
 def do_activation(cfg):

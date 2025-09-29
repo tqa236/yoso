@@ -141,7 +141,8 @@ class DensePoseCocoEval(object):
             "https://dl.fbaipublicfiles.com/densepose/data/SMPL_SUBDIV_TRANSFORM.mat"
         )
         pdist_matrix_fpath = PathManager.get_local_path(
-            "https://dl.fbaipublicfiles.com/densepose/data/Pdist_matrix.pkl", timeout_sec=120
+            "https://dl.fbaipublicfiles.com/densepose/data/Pdist_matrix.pkl",
+            timeout_sec=120,
         )
         SMPL_subdiv = loadmat(smpl_subdiv_fpath)
         self.PDIST_transform = loadmat(pdist_transform_fpath)
@@ -151,7 +152,9 @@ class DensePoseCocoEval(object):
         self.Part_UVs = []
         self.Part_ClosestVertInds = []
         for i in np.arange(24):
-            self.Part_UVs.append(UV[:, SMPL_subdiv["Part_ID_subdiv"].squeeze() == (i + 1)])
+            self.Part_UVs.append(
+                UV[:, SMPL_subdiv["Part_ID_subdiv"].squeeze() == (i + 1)]
+            )
             self.Part_ClosestVertInds.append(
                 ClosestVertInds[SMPL_subdiv["Part_ID_subdiv"].squeeze() == (i + 1)]
             )
@@ -161,7 +164,9 @@ class DensePoseCocoEval(object):
         self.Pdist_matrix = arrays["Pdist_matrix"]
         self.Part_ids = np.array(SMPL_subdiv["Part_ID_subdiv"].squeeze())
         # Mean geodesic distances for parts.
-        self.Mean_Distances = np.array([0, 0.351, 0.107, 0.126, 0.237, 0.173, 0.142, 0.128, 0.150])
+        self.Mean_Distances = np.array(
+            [0, 0.351, 0.107, 0.126, 0.237, 0.173, 0.142, 0.128, 0.150]
+        )
         # Coarse Part labels.
         self.CoarseParts = np.array(
             [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8]
@@ -189,7 +194,9 @@ class DensePoseCocoEval(object):
                 return None
 
             rgns_merged = []
-            for region_x, region_y in zip(img["ignore_regions_x"], img["ignore_regions_y"]):
+            for region_x, region_y in zip(
+                img["ignore_regions_x"], img["ignore_regions_y"]
+            ):
                 rgns = [iter(region_x), iter(region_y)]
                 rgns_merged.append([next(it) for it in itertools.cycle(rgns)])
             rles = maskUtils.frPyObjects(rgns_merged, img["height"], img["width"])
@@ -219,7 +226,9 @@ class DensePoseCocoEval(object):
             # filtering UVs
             ignoremask = np.require(crop_iregion, requirements=["F"])
             mask = self._extract_mask(dt)
-            uvmask = np.require(np.asarray(mask > 0), dtype=np.uint8, requirements=["F"])
+            uvmask = np.require(
+                np.asarray(mask > 0), dtype=np.uint8, requirements=["F"]
+            )
             uvmask_ = maskUtils.encode(uvmask)
             ignoremask_ = maskUtils.encode(ignoremask)
             uviou = maskUtils.iou([uvmask_], [ignoremask_], [1])[0]
@@ -228,8 +237,12 @@ class DensePoseCocoEval(object):
         p = self.params
 
         if p.useCats:
-            gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
-            dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds))
+            gts = self.cocoGt.loadAnns(
+                self.cocoGt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds)
+            )
+            dts = self.cocoDt.loadAnns(
+                self.cocoDt.getAnnIds(imgIds=p.imgIds, catIds=p.catIds)
+            )
         else:
             gts = self.cocoGt.loadAnns(self.cocoGt.getAnnIds(imgIds=p.imgIds))
             dts = self.cocoDt.loadAnns(self.cocoDt.getAnnIds(imgIds=p.imgIds))
@@ -281,12 +294,16 @@ class DensePoseCocoEval(object):
         :return: None
         """
         tic = time.time()
-        logger.info("Running per image DensePose evaluation... {}".format(self.params.iouType))
+        logger.info(
+            "Running per image DensePose evaluation... {}".format(self.params.iouType)
+        )
         p = self.params
         # add backward compatibility if useSegm is specified in params
         if p.useSegm is not None:
             p.iouType = "segm" if p.useSegm == 1 else "bbox"
-            logger.info("useSegm (deprecated) is not None. Running DensePose evaluation")
+            logger.info(
+                "useSegm (deprecated) is not None. Running DensePose evaluation"
+            )
         p.imgIds = list(np.unique(p.imgIds))
         if p.useCats:
             p.catIds = list(np.unique(p.catIds))
@@ -311,7 +328,9 @@ class DensePoseCocoEval(object):
                 }
 
         self.ious = {
-            (imgId, catId): computeIoU(imgId, catId) for imgId in p.imgIds for catId in catIds
+            (imgId, catId): computeIoU(imgId, catId)
+            for imgId in p.imgIds
+            for catId in catIds
         }
 
         evaluateImg = self.evaluateImg
@@ -347,7 +366,9 @@ class DensePoseCocoEval(object):
             y = int(y)
             x = int(x)
             im_mask[y0:y1, x0:x1] = mask[y0 - y : y1 - y, x0 - x : x1 - x]
-        im_mask = np.require(np.asarray(im_mask > 0), dtype=np.uint8, requirements=["F"])
+        im_mask = np.require(
+            np.asarray(im_mask > 0), dtype=np.uint8, requirements=["F"]
+        )
         rle_mask = maskUtils.encode(np.array(im_mask[:, :, np.newaxis], order="F"))[0]
         return rle_mask
 
@@ -503,7 +524,7 @@ class DensePoseCocoEval(object):
                     z = np.zeros(k)
                     dx = np.max((z, x0 - xd), axis=0) + np.max((z, xd - x1), axis=0)
                     dy = np.max((z, y0 - yd), axis=0) + np.max((z, yd - y1), axis=0)
-                e = (dx ** 2 + dy ** 2) / vars / (gt["area"] + np.spacing(1)) / 2
+                e = (dx**2 + dy**2) / vars / (gt["area"] + np.spacing(1)) / 2
                 if k1 > 0:
                     e = e[vg > 0]
                 ious[i, j] = np.sum(np.exp(-e)) / e.shape[0]
@@ -511,11 +532,17 @@ class DensePoseCocoEval(object):
 
     def _extract_mask(self, dt: Dict[str, Any]) -> np.ndarray:
         (densepose_shape, densepose_data_encoded), densepose_bbox_xywh = dt["densepose"]
-        densepose_data = DensePoseResult.decode_png_data(densepose_shape, densepose_data_encoded)
+        densepose_data = DensePoseResult.decode_png_data(
+            densepose_shape, densepose_data_encoded
+        )
         return densepose_data[0]
 
     def _extract_iuv(
-        self, densepose_data: np.ndarray, py: np.ndarray, px: np.ndarray, gt: Dict[str, Any]
+        self,
+        densepose_data: np.ndarray,
+        py: np.ndarray,
+        px: np.ndarray,
+        gt: Dict[str, Any],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Extract arrays of I, U and V values at given points as numpy arrays
@@ -591,34 +618,47 @@ class DensePoseCocoEval(object):
                     else:
                         px[pts == -1] = 0
                         py[pts == -1] = 0
-                        (densepose_shape, densepose_data_encoded), densepose_bbox_xywh = dt[
-                            "densepose"
-                        ]
+                        (
+                            (densepose_shape, densepose_data_encoded),
+                            densepose_bbox_xywh,
+                        ) = dt["densepose"]
                         densepose_data = DensePoseResult.decode_png_data(
                             densepose_shape, densepose_data_encoded
                         )
                         assert densepose_data.shape[2] == dx, (
                             "DensePoseData width {} should be equal to "
-                            "detection bounding box width {}".format(densepose_data.shape[2], dx)
+                            "detection bounding box width {}".format(
+                                densepose_data.shape[2], dx
+                            )
                         )
                         assert densepose_data.shape[1] == dy, (
                             "DensePoseData height {} should be equal to "
-                            "detection bounding box height {}".format(densepose_data.shape[1], dy)
+                            "detection bounding box height {}".format(
+                                densepose_data.shape[1], dy
+                            )
                         )
-                        ipoints, upoints, vpoints = self._extract_iuv(densepose_data, py, px, gt)
+                        ipoints, upoints, vpoints = self._extract_iuv(
+                            densepose_data, py, px, gt
+                        )
                         ipoints[pts == -1] = 0
                         # Find closest vertices in subsampled mesh.
-                        cVerts, cVertsGT = self.findAllClosestVerts(gt, upoints, vpoints, ipoints)
+                        cVerts, cVertsGT = self.findAllClosestVerts(
+                            gt, upoints, vpoints, ipoints
+                        )
                         # Get pairwise geodesic distances between gt and estimated mesh points.
                         dist = self.getDistances(cVertsGT, cVerts)
                         # Compute the Ogps measure.
                         # Find the mean geodesic normalization distance for
                         # each GT point, based on which part it is on.
                         Current_Mean_Distances = self.Mean_Distances[
-                            self.CoarseParts[self.Part_ids[cVertsGT[cVertsGT > 0].astype(int) - 1]]
+                            self.CoarseParts[
+                                self.Part_ids[cVertsGT[cVertsGT > 0].astype(int) - 1]
+                            ]
                         ]
                         # Compute gps
-                        ogps_values = np.exp(-(dist ** 2) / (2 * (Current_Mean_Distances ** 2)))
+                        ogps_values = np.exp(
+                            -(dist**2) / (2 * (Current_Mean_Distances**2))
+                        )
                         #
                         if len(dist) > 0:
                             ogps = np.sum(ogps_values) / len(dist)
@@ -759,7 +799,9 @@ class DensePoseCocoEval(object):
                                 dtm[tind, dind] = gt[m]["id"]
                                 gtm[tind, m] = d["id"]
         # set unmatched detections outside of area range to ignore
-        a = np.array([d["area"] < aRng[0] or d["area"] > aRng[1] for d in dt]).reshape((1, len(dt)))
+        a = np.array([d["area"] < aRng[0] or d["area"] > aRng[1] for d in dt]).reshape(
+            (1, len(dt))
+        )
         dtIg = np.logical_or(dtIg, np.logical_and(dtm == 0, np.repeat(a, T, 0)))
         # store results for given image and category
         # print('Done with the function', len(self.ious[imgId, catId]))
@@ -796,7 +838,9 @@ class DensePoseCocoEval(object):
         K = len(p.catIds) if p.useCats else 1
         A = len(p.areaRng)
         M = len(p.maxDets)
-        precision = -(np.ones((T, R, K, A, M)))  # -1 for the precision of absent categories
+        precision = -(
+            np.ones((T, R, K, A, M))
+        )  # -1 for the precision of absent categories
         recall = -(np.ones((T, K, A, M)))
 
         # create dictionary for future indexing
@@ -810,7 +854,9 @@ class DensePoseCocoEval(object):
         # get inds to evaluate
         k_list = [n for n, k in enumerate(p.catIds) if k in setK]
         m_list = [m for n, m in enumerate(p.maxDets) if m in setM]
-        a_list = [n for n, a in enumerate(map(lambda x: tuple(x), p.areaRng)) if a in setA]
+        a_list = [
+            n for n, a in enumerate(map(lambda x: tuple(x), p.areaRng)) if a in setA
+        ]
         i_list = [n for n, i in enumerate(p.imgIds) if i in setI]
         I0 = len(_pe.imgIds)
         A0 = len(_pe.areaRng)
@@ -830,8 +876,12 @@ class DensePoseCocoEval(object):
                     # mergesort is used to be consistent as Matlab implementation.
                     inds = np.argsort(-dtScores, kind="mergesort")
 
-                    dtm = np.concatenate([e["dtMatches"][:, 0:maxDet] for e in E], axis=1)[:, inds]
-                    dtIg = np.concatenate([e["dtIgnore"][:, 0:maxDet] for e in E], axis=1)[:, inds]
+                    dtm = np.concatenate(
+                        [e["dtMatches"][:, 0:maxDet] for e in E], axis=1
+                    )[:, inds]
+                    dtIg = np.concatenate(
+                        [e["dtIgnore"][:, 0:maxDet] for e in E], axis=1
+                    )[:, inds]
                     gtIg = np.concatenate([e["gtIgnore"] for e in E])
                     npig = np.count_nonzero(gtIg == 0)
                     if npig == 0:
@@ -870,7 +920,9 @@ class DensePoseCocoEval(object):
                             pass
                         precision[t, :, k, a, m] = np.array(q)
         logger.info(
-            "Final: max precision {}, min precision {}".format(np.max(precision), np.min(precision))
+            "Final: max precision {}, min precision {}".format(
+                np.max(precision), np.min(precision)
+            )
         )
         self.eval = {
             "params": p,
@@ -925,7 +977,11 @@ class DensePoseCocoEval(object):
                 mean_s = -1
             else:
                 mean_s = np.mean(s[s > -1])
-            logger.info(iStr.format(titleStr, typeStr, measure, iouStr, areaRng, maxDets, mean_s))
+            logger.info(
+                iStr.format(
+                    titleStr, typeStr, measure, iouStr, areaRng, maxDets, mean_s
+                )
+            )
             return mean_s
 
         def _summarizeDets():
@@ -1022,7 +1078,10 @@ class DensePoseCocoEval(object):
             #
             if sum(Index_points == (i + 1)) > 0:
                 UVs = np.array(
-                    [U_points[Index_points == (i + 1)], V_points[Index_points == (i + 1)]]
+                    [
+                        U_points[Index_points == (i + 1)],
+                        V_points[Index_points == (i + 1)],
+                    ]
                 )
                 Current_Part_UVs = self.Part_UVs[i]
                 Current_Part_ClosestVertInds = self.Part_ClosestVertInds[i]
@@ -1038,12 +1097,13 @@ class DensePoseCocoEval(object):
                 Current_Part_UVs = self.Part_UVs[i]
                 Current_Part_ClosestVertInds = self.Part_ClosestVertInds[i]
                 D = ssd.cdist(Current_Part_UVs.transpose(), UVs.transpose()).squeeze()
-                ClosestVertsGT[I_gt == (i + 1)] = Current_Part_ClosestVertInds[np.argmin(D, axis=0)]
+                ClosestVertsGT[I_gt == (i + 1)] = Current_Part_ClosestVertInds[
+                    np.argmin(D, axis=0)
+                ]
         #
         return ClosestVerts, ClosestVertsGT
 
     def getDistances(self, cVertsGT, cVerts):
-
         ClosestVertsTransformed = self.PDIST_transform[cVerts.astype(int) - 1]
         ClosestVertsGTTransformed = self.PDIST_transform[cVertsGT.astype(int) - 1]
         #
@@ -1091,14 +1151,18 @@ class Params:
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.linspace(0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True)
-        self.recThrs = np.linspace(0.0, 1.00, np.round((1.00 - 0.0) / 0.01) + 1, endpoint=True)
+        self.iouThrs = np.linspace(
+            0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
+        )
+        self.recThrs = np.linspace(
+            0.0, 1.00, np.round((1.00 - 0.0) / 0.01) + 1, endpoint=True
+        )
         self.maxDets = [1, 10, 100]
         self.areaRng = [
-            [0 ** 2, 1e5 ** 2],
-            [0 ** 2, 32 ** 2],
-            [32 ** 2, 96 ** 2],
-            [96 ** 2, 1e5 ** 2],
+            [0**2, 1e5**2],
+            [0**2, 32**2],
+            [32**2, 96**2],
+            [96**2, 1e5**2],
         ]
         self.areaRngLbl = ["all", "small", "medium", "large"]
         self.useCats = 1
@@ -1107,20 +1171,28 @@ class Params:
         self.imgIds = []
         self.catIds = []
         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
-        self.iouThrs = np.linspace(0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True)
-        self.recThrs = np.linspace(0.0, 1.00, np.round((1.00 - 0.0) / 0.01) + 1, endpoint=True)
+        self.iouThrs = np.linspace(
+            0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
+        )
+        self.recThrs = np.linspace(
+            0.0, 1.00, np.round((1.00 - 0.0) / 0.01) + 1, endpoint=True
+        )
         self.maxDets = [20]
-        self.areaRng = [[0 ** 2, 1e5 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
+        self.areaRng = [[0**2, 1e5**2], [32**2, 96**2], [96**2, 1e5**2]]
         self.areaRngLbl = ["all", "medium", "large"]
         self.useCats = 1
 
     def setUvParams(self):
         self.imgIds = []
         self.catIds = []
-        self.iouThrs = np.linspace(0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True)
-        self.recThrs = np.linspace(0.0, 1.00, int(np.round((1.00 - 0.0) / 0.01)) + 1, endpoint=True)
+        self.iouThrs = np.linspace(
+            0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True
+        )
+        self.recThrs = np.linspace(
+            0.0, 1.00, int(np.round((1.00 - 0.0) / 0.01)) + 1, endpoint=True
+        )
         self.maxDets = [20]
-        self.areaRng = [[0 ** 2, 1e5 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
+        self.areaRng = [[0**2, 1e5**2], [32**2, 96**2], [96**2, 1e5**2]]
         self.areaRngLbl = ["all", "medium", "large"]
         self.useCats = 1
 

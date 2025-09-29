@@ -16,7 +16,9 @@ class DensePoseGeneralizedRCNNWithTTA(GeneralizedRCNNWithTTA):
             batch_size (int): batch the augmented images into this batch size for inference.
         """
         self._transform_data = transform_data
-        super().__init__(cfg=cfg, model=model, tta_mapper=tta_mapper, batch_size=batch_size)
+        super().__init__(
+            cfg=cfg, model=model, tta_mapper=tta_mapper, batch_size=batch_size
+        )
 
     # the implementation follows closely the one from detectron2/modeling
     def _inference_one_image(self, input):
@@ -54,7 +56,9 @@ class DensePoseGeneralizedRCNNWithTTA(GeneralizedRCNNWithTTA):
             if self.cfg.MODEL.MASK_ON:
                 outputs[0].pred_masks = self._reduce_pred_masks(outputs, aug_vars)
             if self.cfg.MODEL.DENSEPOSE_ON:
-                outputs[0].pred_densepose = self._reduce_pred_densepose(outputs, aug_vars)
+                outputs[0].pred_densepose = self._reduce_pred_densepose(
+                    outputs, aug_vars
+                )
             # postprocess
             output = self._detector_postprocess(outputs[0], aug_vars)
             return {"instances": output}

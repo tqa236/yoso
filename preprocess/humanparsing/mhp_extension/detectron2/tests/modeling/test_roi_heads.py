@@ -45,7 +45,9 @@ class ROIHeadsTest(unittest.TestCase):
         roi_heads = build_roi_heads(cfg, backbone.output_shape())
 
         with EventStorage():  # capture events in a new storage to discard them
-            proposals, proposal_losses = proposal_generator(images, features, gt_instances)
+            proposals, proposal_losses = proposal_generator(
+                images, features, gt_instances
+            )
             _, detector_losses = roi_heads(images, features, proposals, gt_instances)
 
         expected_losses = {
@@ -53,7 +55,9 @@ class ROIHeadsTest(unittest.TestCase):
             "loss_box_reg": torch.tensor(0.0091214813),
         }
         for name in expected_losses.keys():
-            self.assertTrue(torch.allclose(detector_losses[name], expected_losses[name]))
+            self.assertTrue(
+                torch.allclose(detector_losses[name], expected_losses[name])
+            )
 
     def test_rroi_heads(self):
         torch.manual_seed(121)
@@ -76,11 +80,15 @@ class ROIHeadsTest(unittest.TestCase):
         features = {"res4": torch.rand(num_images, num_channels, 1, 2)}
 
         image_shape = (15, 15)
-        gt_boxes0 = torch.tensor([[2, 2, 2, 2, 30], [4, 4, 4, 4, 0]], dtype=torch.float32)
+        gt_boxes0 = torch.tensor(
+            [[2, 2, 2, 2, 30], [4, 4, 4, 4, 0]], dtype=torch.float32
+        )
         gt_instance0 = Instances(image_shape)
         gt_instance0.gt_boxes = RotatedBoxes(gt_boxes0)
         gt_instance0.gt_classes = torch.tensor([2, 1])
-        gt_boxes1 = torch.tensor([[1.5, 5.5, 1, 3, 0], [8.5, 4, 3, 2, -50]], dtype=torch.float32)
+        gt_boxes1 = torch.tensor(
+            [[1.5, 5.5, 1, 3, 0], [8.5, 4, 3, 2, -50]], dtype=torch.float32
+        )
         gt_instance1 = Instances(image_shape)
         gt_instance1.gt_boxes = RotatedBoxes(gt_boxes1)
         gt_instance1.gt_classes = torch.tensor([1, 2])
@@ -90,7 +98,9 @@ class ROIHeadsTest(unittest.TestCase):
         roi_heads = build_roi_heads(cfg, backbone.output_shape())
 
         with EventStorage():  # capture events in a new storage to discard them
-            proposals, proposal_losses = proposal_generator(images, features, gt_instances)
+            proposals, proposal_losses = proposal_generator(
+                images, features, gt_instances
+            )
             _, detector_losses = roi_heads(images, features, proposals, gt_instances)
 
         expected_losses = {
@@ -101,7 +111,9 @@ class ROIHeadsTest(unittest.TestCase):
             err_msg = "detector_losses[{}] = {}, expected losses = {}".format(
                 name, detector_losses[name], expected_losses[name]
             )
-            self.assertTrue(torch.allclose(detector_losses[name], expected_losses[name]), err_msg)
+            self.assertTrue(
+                torch.allclose(detector_losses[name], expected_losses[name]), err_msg
+            )
 
 
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ class MatrixVisualizer:
         if self.inplace:
             image_target_bgr = image_bgr
         else:
-            image_target_bgr = image_bgr 
+            image_target_bgr = image_bgr
             image_target_bgr *= 0
         x, y, w, h = [int(v) for v in bbox_xywh]
         if w <= 0 or h <= 0:
@@ -47,13 +47,15 @@ class MatrixVisualizer:
         if np.any(matrix_scaled > 255 + _EPSILON):
             logger = logging.getLogger(__name__)
             logger.warning(
-                f"Matrix has values > {255 + _EPSILON} after " f"scaling, clipping to [0..255]"
+                f"Matrix has values > {255 + _EPSILON} after "
+                f"scaling, clipping to [0..255]"
             )
         matrix_scaled_8u = matrix_scaled.clip(0, 255).astype(np.uint8)
         matrix_vis = cv2.applyColorMap(matrix_scaled_8u, self.cmap)
         matrix_vis[mask_bg] = image_target_bgr[y : y + h, x : x + w, :][mask_bg]
         image_target_bgr[y : y + h, x : x + w, :] = (
-            image_target_bgr[y : y + h, x : x + w, :] * (1.0 - self.alpha) + matrix_vis * self.alpha
+            image_target_bgr[y : y + h, x : x + w, :] * (1.0 - self.alpha)
+            + matrix_vis * self.alpha
         )
         return image_target_bgr.astype(np.uint8)
 
@@ -76,7 +78,6 @@ class MatrixVisualizer:
 
 
 class RectangleVisualizer:
-
     _COLOR_GREEN = (18, 127, 15)
 
     def __init__(self, color=_COLOR_GREEN, thickness=1):
@@ -87,12 +88,13 @@ class RectangleVisualizer:
         x, y, w, h = bbox_xywh
         color = color or self.color
         thickness = thickness or self.thickness
-        cv2.rectangle(image_bgr, (int(x), int(y)), (int(x + w), int(y + h)), color, thickness)
+        cv2.rectangle(
+            image_bgr, (int(x), int(y)), (int(x + w), int(y + h)), color, thickness
+        )
         return image_bgr
 
 
 class PointsVisualizer:
-
     _COLOR_GREEN = (18, 127, 15)
 
     def __init__(self, color_bgr=_COLOR_GREEN, r=5):
@@ -109,7 +111,6 @@ class PointsVisualizer:
 
 
 class TextVisualizer:
-
     _COLOR_GRAY = (218, 227, 218)
     _COLOR_WHITE = (255, 255, 255)
 
@@ -150,7 +151,8 @@ class TextVisualizer:
             ).astype(float)
         if self.fill_color_transparency < 1.0:
             image_bgr[y : y + txt_h, x : x + txt_w, :] = (
-                image_bgr[y : y + txt_h, x : x + txt_w, :] * self.fill_color_transparency
+                image_bgr[y : y + txt_h, x : x + txt_w, :]
+                * self.fill_color_transparency
                 + np.array(self.fill_color_bgr) * (1.0 - self.fill_color_transparency)
             ).astype(float)
         cv2.putText(
@@ -177,10 +179,10 @@ class CompoundVisualizer:
         self.visualizers = visualizers
 
     def visualize(self, image_bgr, data):
-        assert len(data) == len(
-            self.visualizers
-        ), "The number of datas {} should match the number of visualizers" " {}".format(
-            len(data), len(self.visualizers)
+        assert len(data) == len(self.visualizers), (
+            "The number of datas {} should match the number of visualizers {}".format(
+                len(data), len(self.visualizers)
+            )
         )
         image = image_bgr
         for i, visualizer in enumerate(self.visualizers):

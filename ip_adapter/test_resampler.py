@@ -13,7 +13,7 @@ IMAGE_ENCODER_NAME_OR_PATH = "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
 def main():
     image_encoder = CLIPVisionModel.from_pretrained(IMAGE_ENCODER_NAME_OR_PATH)
     embedding_dim = image_encoder.config.hidden_size
-    print(f"image_encoder hidden size: ", embedding_dim)
+    print("image_encoder hidden size: ", embedding_dim)
 
     image_proj_model = Resampler(
         dim=1024,
@@ -31,13 +31,19 @@ def main():
 
     dummy_images = torch.randn(BATCH_SIZE, 3, 224, 224)
     with torch.no_grad():
-        image_embeds = image_encoder(dummy_images, output_hidden_states=True).hidden_states[-2]
+        image_embeds = image_encoder(
+            dummy_images, output_hidden_states=True
+        ).hidden_states[-2]
     print("image_embds shape: ", image_embeds.shape)
 
     with torch.no_grad():
         ip_tokens = image_proj_model(image_embeds)
     print("ip_tokens shape:", ip_tokens.shape)
-    assert ip_tokens.shape == (BATCH_SIZE, NUM_QUERIES + NUM_LATENTS_MEAN_POOLED, OUTPUT_DIM)
+    assert ip_tokens.shape == (
+        BATCH_SIZE,
+        NUM_QUERIES + NUM_LATENTS_MEAN_POOLED,
+        OUTPUT_DIM,
+    )
 
 
 if __name__ == "__main__":

@@ -67,7 +67,7 @@ def benchmark_data(args):
     vram = psutil.virtual_memory()
     logger.info(
         "RAM Usage: {:.2f}/{:.2f} GB".format(
-            (vram.total - vram.available) / 1024 ** 3, vram.total / 1024 ** 3
+            (vram.total - vram.available) / 1024**3, vram.total / 1024**3
         )
     )
 
@@ -164,4 +164,11 @@ if __name__ == "__main__":
         f = benchmark_eval
         # only benchmark single-GPU inference.
         assert args.num_gpus == 1 and args.num_machines == 1
-    launch(f, args.num_gpus, args.num_machines, args.machine_rank, args.dist_url, args=(args,))
+    launch(
+        f,
+        args.num_gpus,
+        args.num_machines,
+        args.machine_rank,
+        args.dist_url,
+        args=(args,),
+    )

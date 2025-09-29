@@ -4,7 +4,12 @@
 import logging
 import typing
 import torch
-from fvcore.nn import activation_count, flop_count, parameter_count, parameter_count_table
+from fvcore.nn import (
+    activation_count,
+    flop_count,
+    parameter_count,
+    parameter_count_table,
+)
 from torch import nn
 
 from detectron2.structures import BitMasks, Boxes, ImageList, Instances
@@ -72,7 +77,9 @@ def flop_count_operators(
         model: a detectron2 model that takes `list[dict]` as input.
         inputs (list[dict]): inputs to model, in detectron2's standard format.
     """
-    return _wrapper_count_operators(model=model, inputs=inputs, mode=FLOPS_MODE, **kwargs)
+    return _wrapper_count_operators(
+        model=model, inputs=inputs, mode=FLOPS_MODE, **kwargs
+    )
 
 
 def activation_count_operators(
@@ -93,7 +100,9 @@ def activation_count_operators(
         model: a detectron2 model that takes `list[dict]` as input.
         inputs (list[dict]): inputs to model, in detectron2's standard format.
     """
-    return _wrapper_count_operators(model=model, inputs=inputs, mode=ACTIVATIONS_MODE, **kwargs)
+    return _wrapper_count_operators(
+        model=model, inputs=inputs, mode=ACTIVATIONS_MODE, **kwargs
+    )
 
 
 def _flatten_to_tuple(outputs):
@@ -122,7 +131,6 @@ def _flatten_to_tuple(outputs):
 def _wrapper_count_operators(
     model: nn.Module, inputs: list, mode: str, **kwargs
 ) -> typing.DefaultDict[str, float]:
-
     # ignore some ops
     supported_ops = {k: lambda *args, **kwargs: {} for k in _IGNORED_OPS}
     supported_ops.update(kwargs.pop("supported_ops", {}))
@@ -135,7 +143,8 @@ def _wrapper_count_operators(
         def __init__(self, model):
             super().__init__()
             if isinstance(
-                model, (nn.parallel.distributed.DistributedDataParallel, nn.DataParallel)
+                model,
+                (nn.parallel.distributed.DistributedDataParallel, nn.DataParallel),
             ):
                 self.model = model.module
             else:
@@ -154,9 +163,13 @@ def _wrapper_count_operators(
         if mode == FLOPS_MODE:
             ret = flop_count(WrapModel(model).train(False), (tensor_input,), **kwargs)
         elif mode == ACTIVATIONS_MODE:
-            ret = activation_count(WrapModel(model).train(False), (tensor_input,), **kwargs)
+            ret = activation_count(
+                WrapModel(model).train(False), (tensor_input,), **kwargs
+            )
         else:
-            raise NotImplementedError("Count for mode {} is not supported yet.".format(mode))
+            raise NotImplementedError(
+                "Count for mode {} is not supported yet.".format(mode)
+            )
     # compatible with change in fvcore
     if isinstance(ret, tuple):
         ret = ret[0]

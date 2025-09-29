@@ -14,7 +14,12 @@ from ..backbone import build_backbone
 from ..postprocessing import sem_seg_postprocess
 from .build import META_ARCH_REGISTRY
 
-__all__ = ["SemanticSegmentor", "SEM_SEG_HEADS_REGISTRY", "SemSegFPNHead", "build_sem_seg_head"]
+__all__ = [
+    "SemanticSegmentor",
+    "SEM_SEG_HEADS_REGISTRY",
+    "SemSegFPNHead",
+    "build_sem_seg_head",
+]
 
 
 SEM_SEG_HEADS_REGISTRY = Registry("SEM_SEG_HEADS")
@@ -34,8 +39,12 @@ class SemanticSegmentor(nn.Module):
         super().__init__()
         self.backbone = build_backbone(cfg)
         self.sem_seg_head = build_sem_seg_head(cfg, self.backbone.output_shape())
-        self.register_buffer("pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1))
-        self.register_buffer("pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1))
+        self.register_buffer(
+            "pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1)
+        )
+        self.register_buffer(
+            "pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1)
+        )
 
     @property
     def device(self):
@@ -83,7 +92,9 @@ class SemanticSegmentor(nn.Module):
             return losses
 
         processed_results = []
-        for result, input_per_image, image_size in zip(results, batched_inputs, images.image_sizes):
+        for result, input_per_image, image_size in zip(
+            results, batched_inputs, images.image_sizes
+        ):
             height = input_per_image.get("height")
             width = input_per_image.get("width")
             r = sem_seg_postprocess(result, image_size, height, width)
@@ -126,7 +137,8 @@ class SemSegFPNHead(nn.Module):
         for in_feature in self.in_features:
             head_ops = []
             head_length = max(
-                1, int(np.log2(feature_strides[in_feature]) - np.log2(self.common_stride))
+                1,
+                int(np.log2(feature_strides[in_feature]) - np.log2(self.common_stride)),
             )
             for k in range(head_length):
                 norm_module = nn.GroupNorm(32, conv_dims) if norm == "GN" else None
@@ -144,11 +156,15 @@ class SemSegFPNHead(nn.Module):
                 head_ops.append(conv)
                 if feature_strides[in_feature] != self.common_stride:
                     head_ops.append(
-                        nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
+                        nn.Upsample(
+                            scale_factor=2, mode="bilinear", align_corners=False
+                        )
                     )
             self.scale_heads.append(nn.Sequential(*head_ops))
             self.add_module(in_feature, self.scale_heads[-1])
-        self.predictor = Conv2d(conv_dims, num_classes, kernel_size=1, stride=1, padding=0)
+        self.predictor = Conv2d(
+            conv_dims, num_classes, kernel_size=1, stride=1, padding=0
+        )
         weight_init.c2_msra_fill(self.predictor)
 
     def forward(self, features, targets=None):
@@ -177,7 +193,10 @@ class SemSegFPNHead(nn.Module):
 
     def losses(self, predictions, targets):
         predictions = F.interpolate(
-            predictions, scale_factor=self.common_stride, mode="bilinear", align_corners=False
+            predictions,
+            scale_factor=self.common_stride,
+            mode="bilinear",
+            align_corners=False,
         )
         loss = F.cross_entropy(
             predictions, targets, reduction="mean", ignore_index=self.ignore_value

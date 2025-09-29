@@ -154,7 +154,9 @@ def _paste_mask_lists_in_image(masks, boxes, image_shape, threshold=0.5):
 
         cur_masks = cat([masks[i] for i in cur_ind])
         cur_boxes = boxes[cur_ind]
-        img_masks.append(paste_masks_in_image(cur_masks, cur_boxes, image_shape, threshold))
+        img_masks.append(
+            paste_masks_in_image(cur_masks, cur_boxes, image_shape, threshold)
+        )
 
     img_masks = cat(img_masks)
     ind_masks = cat(ind_masks)
@@ -165,7 +167,9 @@ def _paste_mask_lists_in_image(masks, boxes, image_shape, threshold=0.5):
     return img_masks_out
 
 
-def _postprocess(results, result_mask_info, output_height, output_width, mask_threshold=0.5):
+def _postprocess(
+    results, result_mask_info, output_height, output_width, mask_threshold=0.5
+):
     """
     Post-process the output boxes for TensorMask.
     The input images are often resized when entering an object detector.
@@ -188,7 +192,10 @@ def _postprocess(results, result_mask_info, output_height, output_width, mask_th
     Returns:
         Instances: the postprocessed output from the model, based on the output resolution
     """
-    scale_x, scale_y = (output_width / results.image_size[1], output_height / results.image_size[0])
+    scale_x, scale_y = (
+        output_width / results.image_size[1],
+        output_height / results.image_size[0],
+    )
     results = Instances((output_height, output_width), **results.get_fields())
 
     output_boxes = results.pred_boxes
@@ -236,17 +243,23 @@ class TensorMaskAnchorGenerator(DefaultAnchorGenerator):
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x)
             shifts = torch.stack((shift_x, shift_y, shift_x, shift_y), dim=2)
             # Stack anchors in shapes of (HWA, 4)
-            cur_anchor = (shifts[:, :, None, :] + base_anchors.view(1, 1, -1, 4)).view(-1, 4)
+            cur_anchor = (shifts[:, :, None, :] + base_anchors.view(1, 1, -1, 4)).view(
+                -1, 4
+            )
             anchors.append(cur_anchor)
             unit_lengths.append(
-                torch.full((cur_anchor.shape[0],), stride, dtype=torch.float32, device=device)
+                torch.full(
+                    (cur_anchor.shape[0],), stride, dtype=torch.float32, device=device
+                )
             )
             # create mask indexes using mesh grid
             shifts_l = torch.full((1,), lvl, dtype=torch.int64, device=device)
             shifts_i = torch.zeros((1,), dtype=torch.int64, device=device)
             shifts_h = torch.arange(0, grid_height, dtype=torch.int64, device=device)
             shifts_w = torch.arange(0, grid_width, dtype=torch.int64, device=device)
-            shifts_a = torch.arange(0, base_anchors.shape[0], dtype=torch.int64, device=device)
+            shifts_a = torch.arange(
+                0, base_anchors.shape[0], dtype=torch.int64, device=device
+            )
             grids = torch.meshgrid(shifts_l, shifts_i, shifts_h, shifts_w, shifts_a)
 
             indexes.append(torch.stack(grids, dim=5).view(-1, 5))
@@ -267,8 +280,8 @@ class TensorMaskAnchorGenerator(DefaultAnchorGenerator):
         """
         num_images = len(features[0])
         grid_sizes = [feature_map.shape[-2:] for feature_map in features]
-        anchors_list, lengths_list, indexes_list = self.grid_anchors_with_unit_lengths_and_indexes(
-            grid_sizes
+        anchors_list, lengths_list, indexes_list = (
+            self.grid_anchors_with_unit_lengths_and_indexes(grid_sizes)
         )
 
         # Convert anchors from Tensor to Boxes
@@ -333,9 +346,15 @@ class TensorMask(nn.Module):
             cfg, self.num_levels, self.num_anchors, self.mask_sizes, feature_shapes
         )
         # box transform
-        self.box2box_transform = Box2BoxTransform(weights=cfg.MODEL.TENSOR_MASK.BBOX_REG_WEIGHTS)
-        self.register_buffer("pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1))
-        self.register_buffer("pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1))
+        self.box2box_transform = Box2BoxTransform(
+            weights=cfg.MODEL.TENSOR_MASK.BBOX_REG_WEIGHTS
+        )
+        self.register_buffer(
+            "pixel_mean", torch.Tensor(cfg.MODEL.PIXEL_MEAN).view(-1, 1, 1)
+        )
+        self.register_buffer(
+            "pixel_std", torch.Tensor(cfg.MODEL.PIXEL_STD).view(-1, 1, 1)
+        )
 
     @property
     def device(self):
@@ -361,7 +380,9 @@ class TensorMask(nn.Module):
             gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
         elif "targets" in batched_inputs[0]:
             log_first_n(
-                logging.WARN, "'targets' in the model inputs is now renamed to 'instances'!", n=10
+                logging.WARN,
+                "'targets' in the model inputs is now renamed to 'instances'!",
+                n=10,
             )
             gt_instances = [x["targets"].to(self.device) for x in batched_inputs]
         else:
@@ -391,7 +412,9 @@ class TensorMask(nn.Module):
             )
         else:
             # do inference to get the output
-            results = self.inference(pred_logits, pred_deltas, pred_masks, anchors, indexes, images)
+            results = self.inference(
+                pred_logits, pred_deltas, pred_masks, anchors, indexes, images
+            )
             processed_results = []
             for results_im, input_im, image_size in zip(
                 results, batched_inputs, images.image_sizes
@@ -429,7 +452,9 @@ class TensorMask(nn.Module):
         gt_classes_target, gt_valid_inds = gt_class_info
         gt_deltas, gt_fg_inds = gt_delta_info
         gt_masks, gt_mask_inds = gt_mask_info
-        loss_normalizer = torch.tensor(max(1, num_fg), dtype=torch.float32, device=self.device)
+        loss_normalizer = torch.tensor(
+            max(1, num_fg), dtype=torch.float32, device=self.device
+        )
 
         # classification and regression
         pred_logits, pred_deltas = permute_all_cls_and_box_to_N_HWA_K_and_concat(
@@ -450,7 +475,9 @@ class TensorMask(nn.Module):
             loss_box_reg = pred_deltas.sum() * 0
         else:
             loss_box_reg = (
-                smooth_l1_loss(pred_deltas[gt_fg_inds], gt_deltas, beta=0.0, reduction="sum")
+                smooth_l1_loss(
+                    pred_deltas[gt_fg_inds], gt_deltas, beta=0.0, reduction="sum"
+                )
                 / loss_normalizer
             )
         losses = {"loss_cls": loss_cls, "loss_box_reg": loss_box_reg}
@@ -459,7 +486,7 @@ class TensorMask(nn.Module):
         if self.mask_on:
             loss_mask = 0
             for lvl in range(self.num_levels):
-                cur_level_factor = 2 ** lvl if self.bipyramid_on else 1
+                cur_level_factor = 2**lvl if self.bipyramid_on else 1
                 for anc in range(self.num_anchors):
                     cur_gt_mask_inds = gt_mask_inds[lvl][anc]
                     if cur_gt_mask_inds is None:
@@ -468,7 +495,7 @@ class TensorMask(nn.Module):
                         cur_mask_size = self.mask_sizes[anc] * cur_level_factor
                         # TODO maybe there are numerical issues when mask sizes are large
                         cur_size_divider = torch.tensor(
-                            self.mask_loss_weight / (cur_mask_size ** 2),
+                            self.mask_loss_weight / (cur_mask_size**2),
                             dtype=torch.float32,
                             device=self.device,
                         )
@@ -481,7 +508,9 @@ class TensorMask(nn.Module):
                         ]
 
                         loss_mask += F.binary_cross_entropy_with_logits(
-                            cur_pred_masks.view(-1, cur_mask_size, cur_mask_size),  # V, U
+                            cur_pred_masks.view(
+                                -1, cur_mask_size, cur_mask_size
+                            ),  # V, U
                             gt_masks[lvl][anc].to(dtype=torch.float32),
                             reduction="sum",
                             weight=cur_size_divider,
@@ -533,8 +562,12 @@ class TensorMask(nn.Module):
         """
         gt_classes = []
         gt_deltas = []
-        gt_masks = [[[] for _ in range(self.num_anchors)] for _ in range(self.num_levels)]
-        gt_mask_inds = [[[] for _ in range(self.num_anchors)] for _ in range(self.num_levels)]
+        gt_masks = [
+            [[] for _ in range(self.num_anchors)] for _ in range(self.num_levels)
+        ]
+        gt_mask_inds = [
+            [[] for _ in range(self.num_anchors)] for _ in range(self.num_levels)
+        ]
 
         anchors = [Boxes.cat(anchors_i) for anchors_i in anchors]
         unit_lengths = [cat(unit_lengths_i) for unit_lengths_i in unit_lengths]
@@ -553,7 +586,10 @@ class TensorMask(nn.Module):
             if has_gt:
                 # Compute the pairwise matrix
                 gt_matched_inds, anchor_labels = _assignment_rule(
-                    targets_im.gt_boxes, anchors_im, unit_lengths_im, self.min_anchor_size
+                    targets_im.gt_boxes,
+                    anchors_im,
+                    unit_lengths_im,
+                    self.min_anchor_size,
                 )
                 # Find the foreground instances
                 fg_inds = anchor_labels == 1
@@ -582,9 +618,11 @@ class TensorMask(nn.Module):
                     for lvl in range(self.num_levels):
                         ids_lvl = matched_indexes[:, 0] == lvl
                         if torch.any(ids_lvl):
-                            cur_level_factor = 2 ** lvl if self.bipyramid_on else 1
+                            cur_level_factor = 2**lvl if self.bipyramid_on else 1
                             for anc in range(self.num_anchors):
-                                ids_lvl_anchor = ids_lvl & (matched_indexes[:, 4] == anc)
+                                ids_lvl_anchor = ids_lvl & (
+                                    matched_indexes[:, 4] == anc
+                                )
                                 if torch.any(ids_lvl_anchor):
                                     gt_masks[lvl][anc].append(
                                         targets_im[
@@ -595,7 +633,9 @@ class TensorMask(nn.Module):
                                         )
                                     )
                                     # Select (N, H, W) dimensions
-                                    gt_mask_inds_lvl_anc = matched_indexes[ids_lvl_anchor, 1:4]
+                                    gt_mask_inds_lvl_anc = matched_indexes[
+                                        ids_lvl_anchor, 1:4
+                                    ]
                                     # Set the image index to the current image
                                     gt_mask_inds_lvl_anc[:, 0] = i
                                     gt_mask_inds[lvl][anc].append(gt_mask_inds_lvl_anc)
@@ -606,14 +646,18 @@ class TensorMask(nn.Module):
         gt_valid_inds = gt_classes >= 0
         gt_fg_inds = gt_valid_inds & (gt_classes < self.num_classes)
         gt_classes_target = torch.zeros(
-            (gt_classes.shape[0], self.num_classes), dtype=torch.float32, device=self.device
+            (gt_classes.shape[0], self.num_classes),
+            dtype=torch.float32,
+            device=self.device,
         )
         gt_classes_target[gt_fg_inds, gt_classes[gt_fg_inds]] = 1
         gt_deltas = cat(gt_deltas) if gt_deltas else None
 
         # Masks
         gt_masks = [[cat(mla) if mla else None for mla in ml] for ml in gt_masks]
-        gt_mask_inds = [[cat(ila) if ila else None for ila in il] for il in gt_mask_inds]
+        gt_mask_inds = [
+            [cat(ila) if ila else None for ila in il] for il in gt_mask_inds
+        ]
         return (
             (gt_classes_target, gt_valid_inds),
             (gt_deltas, gt_fg_inds),
@@ -725,9 +769,11 @@ class TensorMask(nn.Module):
             result_anchors = top_anchors[keep]
             # Get masks and do sigmoid
             for lvl, _, h, w, anc in result_indexes.tolist():
-                cur_size = self.mask_sizes[anc] * (2 ** lvl if self.bipyramid_on else 1)
+                cur_size = self.mask_sizes[anc] * (2**lvl if self.bipyramid_on else 1)
                 result_masks.append(
-                    torch.sigmoid(pred_masks[lvl][anc][:, h, w].view(1, cur_size, cur_size))
+                    torch.sigmoid(
+                        pred_masks[lvl][anc][:, h, w].view(1, cur_size, cur_size)
+                    )
                 )
 
         return results, (result_masks, result_anchors)
@@ -743,7 +789,9 @@ class TensorMask(nn.Module):
 
 
 class TensorMaskHead(nn.Module):
-    def __init__(self, cfg, num_levels, num_anchors, mask_sizes, input_shape: List[ShapeSpec]):
+    def __init__(
+        self, cfg, num_levels, num_anchors, mask_sizes, input_shape: List[ShapeSpec]
+    ):
         """
         TensorMask head.
         """
@@ -769,7 +817,9 @@ class TensorMaskHead(nn.Module):
         cur_channels = in_channels
         for _ in range(num_convs):
             cls_subnet.append(
-                nn.Conv2d(cur_channels, cls_channels, kernel_size=3, stride=1, padding=1)
+                nn.Conv2d(
+                    cur_channels, cls_channels, kernel_size=3, stride=1, padding=1
+                )
             )
             cur_channels = cls_channels
             cls_subnet.append(nn.ReLU())
@@ -785,7 +835,9 @@ class TensorMaskHead(nn.Module):
         cur_channels = in_channels
         for _ in range(num_convs):
             bbox_subnet.append(
-                nn.Conv2d(cur_channels, bbox_channels, kernel_size=3, stride=1, padding=1)
+                nn.Conv2d(
+                    cur_channels, bbox_channels, kernel_size=3, stride=1, padding=1
+                )
             )
             cur_channels = bbox_channels
             bbox_subnet.append(nn.ReLU())
@@ -802,7 +854,9 @@ class TensorMaskHead(nn.Module):
             cur_channels = in_channels
             for _ in range(num_convs):
                 mask_subnet.append(
-                    nn.Conv2d(cur_channels, mask_channels, kernel_size=3, stride=1, padding=1)
+                    nn.Conv2d(
+                        cur_channels, mask_channels, kernel_size=3, stride=1, padding=1
+                    )
                 )
                 cur_channels = mask_channels
                 mask_subnet.append(nn.ReLU())
@@ -814,7 +868,11 @@ class TensorMaskHead(nn.Module):
                 self.add_module(
                     cur_mask_module,
                     nn.Conv2d(
-                        cur_channels, mask_size * mask_size, kernel_size=1, stride=1, padding=0
+                        cur_channels,
+                        mask_size * mask_size,
+                        kernel_size=1,
+                        stride=1,
+                        padding=0,
                     ),
                 )
                 modules_list.append(getattr(self, cur_mask_module))
@@ -822,11 +880,17 @@ class TensorMaskHead(nn.Module):
                 if self.bipyramid_on:
                     for lvl in range(num_levels):
                         cur_mask_module = "align2nat_%02d" % lvl
-                        lambda_val = 2 ** lvl
+                        lambda_val = 2**lvl
                         setattr(self, cur_mask_module, SwapAlign2Nat(lambda_val))
                     # Also the fusing layer, stay at the same channel size
                     mask_fuse = [
-                        nn.Conv2d(cur_channels, cur_channels, kernel_size=3, stride=1, padding=1),
+                        nn.Conv2d(
+                            cur_channels,
+                            cur_channels,
+                            kernel_size=3,
+                            stride=1,
+                            padding=1,
+                        ),
                         nn.ReLU(),
                     ]
                     self.mask_fuse = nn.Sequential(*mask_fuse)
@@ -876,11 +940,14 @@ class TensorMaskHead(nn.Module):
                 H, W = mask_feat_high_res.shape[-2:]
                 mask_feats_up = []
                 for lvl, mask_feat in enumerate(mask_feats):
-                    lambda_val = 2.0 ** lvl
+                    lambda_val = 2.0**lvl
                     mask_feat_up = mask_feat
                     if lvl > 0:
                         mask_feat_up = F.interpolate(
-                            mask_feat, scale_factor=lambda_val, mode="bilinear", align_corners=False
+                            mask_feat,
+                            scale_factor=lambda_val,
+                            mode="bilinear",
+                            align_corners=False,
                         )
                     mask_feats_up.append(
                         self.mask_fuse(mask_feat_up[:, :, :H, :W] + mask_feat_high_res)

@@ -84,14 +84,14 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
     if evaluator_type == "coco_panoptic_seg":
         evaluator_list.append(COCOPanopticEvaluator(dataset_name, output_folder))
     if evaluator_type == "cityscapes_instance":
-        assert (
-            torch.cuda.device_count() >= comm.get_rank()
-        ), "CityscapesEvaluator currently do not work with multiple machines."
+        assert torch.cuda.device_count() >= comm.get_rank(), (
+            "CityscapesEvaluator currently do not work with multiple machines."
+        )
         return CityscapesInstanceEvaluator(dataset_name)
     if evaluator_type == "cityscapes_sem_seg":
-        assert (
-            torch.cuda.device_count() >= comm.get_rank()
-        ), "CityscapesEvaluator currently do not work with multiple machines."
+        assert torch.cuda.device_count() >= comm.get_rank(), (
+            "CityscapesEvaluator currently do not work with multiple machines."
+        )
         return CityscapesSemSegEvaluator(dataset_name)
     if evaluator_type == "pascal_voc":
         return PascalVOCDetectionEvaluator(dataset_name)
@@ -99,7 +99,9 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
         return LVISEvaluator(dataset_name, cfg, True, output_folder)
     if len(evaluator_list) == 0:
         raise NotImplementedError(
-            "no Evaluator for the dataset {} with the type {}".format(dataset_name, evaluator_type)
+            "no Evaluator for the dataset {} with the type {}".format(
+                dataset_name, evaluator_type
+            )
         )
     if len(evaluator_list) == 1:
         return evaluator_list[0]
@@ -132,7 +134,10 @@ def do_train(cfg, model, resume=False):
         model, cfg.OUTPUT_DIR, optimizer=optimizer, scheduler=scheduler
     )
     start_iter = (
-        checkpointer.resume_or_load(cfg.MODEL.WEIGHTS, resume=resume).get("iteration", -1) + 1
+        checkpointer.resume_or_load(cfg.MODEL.WEIGHTS, resume=resume).get(
+            "iteration", -1
+        )
+        + 1
     )
     max_iter = cfg.SOLVER.MAX_ITER
 
@@ -163,7 +168,9 @@ def do_train(cfg, model, resume=False):
             losses = sum(loss_dict.values())
             assert torch.isfinite(losses).all(), loss_dict
 
-            loss_dict_reduced = {k: v.item() for k, v in comm.reduce_dict(loss_dict).items()}
+            loss_dict_reduced = {
+                k: v.item() for k, v in comm.reduce_dict(loss_dict).items()
+            }
             losses_reduced = sum(loss for loss in loss_dict_reduced.values())
             if comm.is_main_process():
                 storage.put_scalars(total_loss=losses_reduced, **loss_dict_reduced)
@@ -171,7 +178,9 @@ def do_train(cfg, model, resume=False):
             optimizer.zero_grad()
             losses.backward()
             optimizer.step()
-            storage.put_scalar("lr", optimizer.param_groups[0]["lr"], smoothing_hint=False)
+            storage.put_scalar(
+                "lr", optimizer.param_groups[0]["lr"], smoothing_hint=False
+            )
             scheduler.step()
 
             if (
@@ -183,7 +192,9 @@ def do_train(cfg, model, resume=False):
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
 
-            if iteration - start_iter > 5 and (iteration % 20 == 0 or iteration == max_iter):
+            if iteration - start_iter > 5 and (
+                iteration % 20 == 0 or iteration == max_iter
+            ):
                 for writer in writers:
                     writer.write()
             periodic_checkpointer.step(iteration)

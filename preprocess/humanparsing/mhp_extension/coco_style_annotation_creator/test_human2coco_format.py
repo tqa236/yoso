@@ -8,13 +8,29 @@ import pycococreatortools
 
 
 def get_arguments():
-    parser = argparse.ArgumentParser(description="transform mask annotation to coco annotation")
-    parser.add_argument("--dataset", type=str, default='CIHP', help="name of dataset (CIHP, MHPv2 or VIP)")
-    parser.add_argument("--json_save_dir", type=str, default='../data/CIHP/annotations',
-                        help="path to save coco-style annotation json file")
-    parser.add_argument("--test_img_dir", type=str, default='../data/CIHP/Testing/Images',
-                        help="test image path")
+    parser = argparse.ArgumentParser(
+        description="transform mask annotation to coco annotation"
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="CIHP",
+        help="name of dataset (CIHP, MHPv2 or VIP)",
+    )
+    parser.add_argument(
+        "--json_save_dir",
+        type=str,
+        default="../data/CIHP/annotations",
+        help="path to save coco-style annotation json file",
+    )
+    parser.add_argument(
+        "--test_img_dir",
+        type=str,
+        default="../data/CIHP/Testing/Images",
+        help="test image path",
+    )
     return parser.parse_args()
+
 
 args = get_arguments()
 
@@ -24,22 +40,16 @@ INFO = {
     "version": "",
     "year": 2020,
     "contributor": "yunqiuxu",
-    "date_created": datetime.datetime.utcnow().isoformat(' ')
+    "date_created": datetime.datetime.utcnow().isoformat(" "),
 }
 
-LICENSES = [
-    {
-        "id": 1,
-        "name": "",
-        "url": ""
-    }
-]
+LICENSES = [{"id": 1, "name": "", "url": ""}]
 
 CATEGORIES = [
     {
-        'id': 1,
-        'name': 'person',
-        'supercategory': 'person',
+        "id": 1,
+        "name": "person",
+        "supercategory": "person",
     },
 ]
 
@@ -50,7 +60,7 @@ def main(args):
         "licenses": LICENSES,
         "categories": CATEGORIES,
         "images": [],
-        "annotations": []
+        "annotations": [],
     }
 
     image_id = 1
@@ -66,7 +76,9 @@ def main(args):
     if not os.path.exists(os.path.join(args.json_save_dir)):
         os.mkdir(os.path.join(args.json_save_dir))
 
-    with open('{}/{}.json'.format(args.json_save_dir, args.dataset), 'w') as output_json_file:
+    with open(
+        "{}/{}.json".format(args.json_save_dir, args.dataset), "w"
+    ) as output_json_file:
         json.dump(coco_output, output_json_file)
 
 

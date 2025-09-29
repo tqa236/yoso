@@ -10,13 +10,15 @@ from typing import Any, ClassVar, Dict, List
 import torch
 
 from detectron2.config import CfgNode, get_cfg
-from detectron2.data.detection_utils import read_image
 from detectron2.engine.defaults import DefaultPredictor
 from detectron2.structures.instances import Instances
 from detectron2.utils.logger import setup_logger
 
 from densepose import add_densepose_config
-from densepose.structures import DensePoseChartPredictorOutput, DensePoseEmbeddingPredictorOutput
+from densepose.structures import (
+    DensePoseChartPredictorOutput,
+    DensePoseEmbeddingPredictorOutput,
+)
 from densepose.utils.logger import verbosity_to_level
 from densepose.vis.base import CompoundVisualizer
 from densepose.vis.bounding_box import ScoredBoundingBoxVisualizer
@@ -107,7 +109,11 @@ class InferenceAction(Action):
 
     @classmethod
     def setup_config(
-        cls: type, config_fpath: str, model_fpath: str, args: argparse.Namespace, opts: List[str]
+        cls: type,
+        config_fpath: str,
+        model_fpath: str,
+        args: argparse.Namespace,
+        opts: List[str],
     ):
         cfg = get_cfg()
         add_densepose_config(cfg)
@@ -144,7 +150,9 @@ class DumpAction(InferenceAction):
 
     @classmethod
     def add_parser(cls: type, subparsers: argparse._SubParsersAction):
-        parser = subparsers.add_parser(cls.COMMAND, help="Dump model outputs to a file.")
+        parser = subparsers.add_parser(
+            cls.COMMAND, help="Dump model outputs to a file."
+        )
         cls.add_arguments(parser)
         parser.set_defaults(func=cls.execute)
 
@@ -172,7 +180,9 @@ class DumpAction(InferenceAction):
             if outputs.has("pred_densepose"):
                 if isinstance(outputs.pred_densepose, DensePoseChartPredictorOutput):
                     extractor = DensePoseResultExtractor()
-                elif isinstance(outputs.pred_densepose, DensePoseEmbeddingPredictorOutput):
+                elif isinstance(
+                    outputs.pred_densepose, DensePoseEmbeddingPredictorOutput
+                ):
                     extractor = DensePoseOutputsExtractor()
                 result["pred_densepose"] = extractor(outputs)[0]
         context["results"].append(result)
@@ -223,8 +233,9 @@ class ShowAction(InferenceAction):
         parser.add_argument(
             "visualizations",
             metavar="<visualizations>",
-            help="Comma separated list of visualizations, possible values: "
-            "[{}]".format(",".join(sorted(cls.VISUALIZERS.keys()))),
+            help="Comma separated list of visualizations, possible values: [{}]".format(
+                ",".join(sorted(cls.VISUALIZERS.keys()))
+            ),
         )
         parser.add_argument(
             "--min_score",
@@ -234,7 +245,11 @@ class ShowAction(InferenceAction):
             help="Minimum detection score to visualize",
         )
         parser.add_argument(
-            "--nms_thresh", metavar="<threshold>", default=None, type=float, help="NMS threshold"
+            "--nms_thresh",
+            metavar="<threshold>",
+            default=None,
+            type=float,
+            help="NMS threshold",
         )
         parser.add_argument(
             "--texture_atlas",
@@ -257,7 +272,11 @@ class ShowAction(InferenceAction):
 
     @classmethod
     def setup_config(
-        cls: type, config_fpath: str, model_fpath: str, args: argparse.Namespace, opts: List[str]
+        cls: type,
+        config_fpath: str,
+        model_fpath: str,
+        args: argparse.Namespace,
+        opts: List[str],
     ):
         opts.append("MODEL.ROI_HEADS.SCORE_THRESH_TEST")
         opts.append(str(args.min_score))
@@ -273,6 +292,7 @@ class ShowAction(InferenceAction):
     ):
         import cv2
         import numpy as np
+
         visualizer = context["visualizer"]
         extractor = context["extractor"]
         # image_fpath = entry["file_name"]
@@ -284,8 +304,8 @@ class ShowAction(InferenceAction):
 
         return image_vis
         entry_idx = context["entry_idx"] + 1
-        out_fname = './image-densepose/' + image_fpath.split('/')[-1]
-        out_dir = './image-densepose'
+        out_fname = "./image-densepose/" + image_fpath.split("/")[-1]
+        out_dir = "./image-densepose"
         out_dir = os.path.dirname(out_fname)
         if len(out_dir) > 0 and not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -296,7 +316,8 @@ class ShowAction(InferenceAction):
     @classmethod
     def postexecute(cls: type, context: Dict[str, Any]):
         pass
-# python ./apply_net.py show ./configs/densepose_rcnn_R_50_FPN_s1x.yaml https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl /home/alin0222/DressCode/upper_body/images dp_segm -v --opts MODEL.DEVICE cpu
+
+    # python ./apply_net.py show ./configs/densepose_rcnn_R_50_FPN_s1x.yaml https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl /home/alin0222/DressCode/upper_body/images dp_segm -v --opts MODEL.DEVICE cpu
 
     @classmethod
     def _get_out_fname(cls: type, entry_idx: int, fname_base: str):
@@ -304,7 +325,9 @@ class ShowAction(InferenceAction):
         return base + ".{0:04d}".format(entry_idx) + ext
 
     @classmethod
-    def create_context(cls: type, args: argparse.Namespace, cfg: CfgNode) -> Dict[str, Any]:
+    def create_context(
+        cls: type, args: argparse.Namespace, cfg: CfgNode
+    ) -> Dict[str, Any]:
         vis_specs = args.visualizations.split(",")
         visualizers = []
         extractors = []
@@ -333,7 +356,9 @@ class ShowAction(InferenceAction):
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=DOC,
-        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=120),
+        formatter_class=lambda prog: argparse.HelpFormatter(
+            prog, max_help_position=120
+        ),
     )
     parser.set_defaults(func=lambda _: parser.print_help(sys.stdout))
     subparsers = parser.add_subparsers(title="Actions")
