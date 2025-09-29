@@ -9,10 +9,9 @@ Time constraints will significantly impact the approach
 
 ## Tasks
 
-- Construct the dataset
-- Lit review
-  - https://arxiv.org/abs/2211.09800
-  - https://arxiv.org/pdf/1911.02685
+- Construct the dataset (data augmentation?)
+- Inference
+- Choose the metrics
 - Model
 - Deployment
 
