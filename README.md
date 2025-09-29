@@ -16,6 +16,10 @@ Time constraints will significantly impact the approach
 - Deployment
 - Refactor the modules to namespaces
 
+## Future improvements
+
+- More precise mask
+
 ### Metrics
 
 - Hedonic value

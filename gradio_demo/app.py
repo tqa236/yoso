@@ -281,24 +281,24 @@ def start_tryon(
     # return images[0], mask_gray
 
 
-garm_list = os.listdir(os.path.join(example_path, "cloth"))
-garm_list_path = [os.path.join(example_path, "cloth", garm) for garm in garm_list]
-
-human_list = os.listdir(os.path.join(example_path, "human"))
-human_list_path = [os.path.join(example_path, "human", human) for human in human_list]
-
-# human_ex_list = []
-# for ex_human in human_list_path:
-#     ex_dict = {}
-#     ex_dict["background"] = ex_human
-#     ex_dict["layers"] = None
-#     ex_dict["composite"] = None
-#     human_ex_list.append(ex_dict)
-human_ex_list = human_list_path
-##default human
-
-
 def main():
+    garm_list = os.listdir(os.path.join(example_path, "cloth"))
+    garm_list_path = [os.path.join(example_path, "cloth", garm) for garm in garm_list]
+
+    human_list = os.listdir(os.path.join(example_path, "human"))
+    human_list_path = [
+        os.path.join(example_path, "human", human) for human in human_list
+    ]
+
+    # human_ex_list = []
+    # for ex_human in human_list_path:
+    #     ex_dict = {}
+    #     ex_dict["background"] = ex_human
+    #     ex_dict["layers"] = None
+    #     ex_dict["composite"] = None
+    #     human_ex_list.append(ex_dict)
+    human_ex_list = human_list_path
+    ##default human
     image_blocks = gr.Blocks().queue()
     with image_blocks as demo:
         # gr.Markdown("## IDM-VTON 👕👔👚")
