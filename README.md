@@ -33,7 +33,7 @@ Some of the required input for color correction should already be available from
 
 ## Contributing
 
-### Installing development requirements
+## Installing development requirements
 
 ```bash
 uv ~/venv yoso --python 3.13
@@ -41,8 +41,16 @@ source ~/venv/yoso/bin/activate
 uv pip install -r requirements/requirements.txt
 ```
 
-### Running the tests
+## Running the tests
 
 ```bash
 pytest tests
 ```
+
+## Credits
+
+This project reuses/modifies code from **[IDM-VTON](https://github.com/yisol/IDM-VTON)** by [Yisol](https://github.com/yisol), licensed under **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)**.
+
+## License
+
+The codes and checkpoints in this repository are under the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.
