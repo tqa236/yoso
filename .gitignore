@@ -220,3 +220,6 @@ data
 ckpt
 
 configs
+
+!detectron2/data
+!densepose/data
