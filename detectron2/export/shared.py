@@ -315,8 +315,9 @@ def construct_init_net_from_params(
         if isinstance(blob, str):
             logger.warning(
                 (
-                    "Blob {} with type {} is not supported in generating init net,"
-                    " skipped.".format(name, type(blob))
+                    "Blob {} with type {} is not supported in generating init net, skipped.".format(
+                        name, type(blob)
+                    )
                 )
             )
             continue
@@ -389,8 +390,9 @@ def get_params_from_init_net(
 
 def _updater_raise(op, input_types, output_types):
     raise RuntimeError(
-        "Failed to apply updater for op {} given input_types {} and"
-        " output_types {}".format(op, input_types, output_types)
+        "Failed to apply updater for op {} given input_types {} and output_types {}".format(
+            op, input_types, output_types
+        )
     )
 
 

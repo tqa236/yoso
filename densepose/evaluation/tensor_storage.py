@@ -90,8 +90,7 @@ class SingleProcessTensorStorage:
         self.storage_impl.seek(record_id * self.record_size_b, os.SEEK_SET)
         data_bytes = self.storage_impl.read(self.record_size_b)
         assert len(data_bytes) == self.record_size_b, (
-            f"Expected data size {self.record_size_b} B could not be read: "
-            f"got {len(data_bytes)} B"
+            f"Expected data size {self.record_size_b} B could not be read: got {len(data_bytes)} B"
         )
         record = {}
         cur_idx = 0

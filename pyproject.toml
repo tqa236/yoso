@@ -74,3 +74,8 @@ explicit = true
 
 [tool.repo-review]
 ignore = ["PY004", "PY007", "PP003", "PP301", "GH102", "GH103", "GH212", "PC", "MY", "RF", "RTD"]
+
+[tool.ruff]
+select = ["E", "F"]
+ignore = ["E501", "E731","E402", "E721", "F401", "E741", "F841", "F822", "E711", "F821", "F405","F403","E712"]
+line-length = 88

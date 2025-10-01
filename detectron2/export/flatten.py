@@ -75,8 +75,7 @@ class ListSchema(Schema):
         values = self._split(values, self.sizes)
         if len(values) != len(self.schemas):
             raise ValueError(
-                f"Values has length {len(values)} but schemas "
-                f"has length {len(self.schemas)}!"
+                f"Values has length {len(values)} but schemas has length {len(self.schemas)}!"
             )
         values = [m(v) for m, v in zip(self.schemas, values)]
         return list(values)

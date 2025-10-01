@@ -11,8 +11,9 @@ class DensePoseList:
         self, densepose_datas, boxes_xyxy_abs, image_size_hw, device=_TORCH_DEVICE_CPU
     ):
         assert len(densepose_datas) == len(boxes_xyxy_abs), (
-            "Attempt to initialize DensePoseList with {} DensePose datas "
-            "and {} boxes".format(len(densepose_datas), len(boxes_xyxy_abs))
+            "Attempt to initialize DensePoseList with {} DensePose datas and {} boxes".format(
+                len(densepose_datas), len(boxes_xyxy_abs)
+            )
         )
         self.densepose_datas = []
         for densepose_data in densepose_datas:

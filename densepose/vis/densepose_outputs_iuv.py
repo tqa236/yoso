@@ -67,8 +67,7 @@ class DensePoseOutputsVisualizer:
             )
         )
         assert N == len(bboxes_xywh), (
-            "number of bounding boxes {}"
-            " should be equal to first dim size of outputs {}".format(
+            "number of bounding boxes {} should be equal to first dim size of outputs {}".format(
                 len(bboxes_xywh), N
             )
         )

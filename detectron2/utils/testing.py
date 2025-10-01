@@ -297,8 +297,7 @@ def skipIfUnsupportedMinOpsetVersion(min_opset_version, current_opset_version=No
                 opset_version = current_opset_version
             if opset_version < min_opset_version:
                 raise unittest.SkipTest(
-                    f"Unsupported opset_version {opset_version}"
-                    f", required is {min_opset_version}"
+                    f"Unsupported opset_version {opset_version}, required is {min_opset_version}"
                 )
             return func(self)
 
@@ -311,10 +310,7 @@ def skipIfUnsupportedMinTorchVersion(min_version):
     """
     Skips tests for PyTorch versions older than min_version.
     """
-    reason = (
-        f"module 'torch' has __version__ {torch.__version__}"
-        f", required is: {min_version}"
-    )
+    reason = f"module 'torch' has __version__ {torch.__version__}, required is: {min_version}"
     return unittest.skipIf(not min_torch_version(min_version), reason)
 
 

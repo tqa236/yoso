@@ -134,8 +134,7 @@ class COCOEvaluator(DatasetEvaluator):
         if not hasattr(self._metadata, "json_file"):
             if output_dir is None:
                 raise ValueError(
-                    "output_dir must be provided to COCOEvaluator "
-                    "for datasets not in COCO format."
+                    "output_dir must be provided to COCOEvaluator for datasets not in COCO format."
                 )
             self._logger.info(f"Trying to convert '{dataset_name}' to COCO format ...")
 

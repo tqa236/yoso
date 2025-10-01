@@ -114,18 +114,17 @@ class DensePoseOutputsVertexVisualizer:
         E = densepose_output.embedding
         N = S.size(0)
         assert N == E.size(0), (
-            "CSE coarse_segm {} and embeddings {}"
-            " should have equal first dim size".format(S.size(), E.size())
+            "CSE coarse_segm {} and embeddings {} should have equal first dim size".format(
+                S.size(), E.size()
+            )
         )
         assert N == len(bboxes_xywh), (
-            "number of bounding boxes {}"
-            " should be equal to first dim size of outputs {}".format(
+            "number of bounding boxes {} should be equal to first dim size of outputs {}".format(
                 len(bboxes_xywh), N
             )
         )
         assert N == len(pred_classes), (
-            "number of predicted classes {}"
-            " should be equal to first dim size of outputs {}".format(
+            "number of predicted classes {} should be equal to first dim size of outputs {}".format(
                 len(bboxes_xywh), N
             )
         )

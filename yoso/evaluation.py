@@ -1,9 +1,4 @@
-import os
-import numpy as np
-from pathlib import Path
-from typing import Callable
 from PIL import Image
-import json
 from yoso.demo.app import start_tryon
 
 
