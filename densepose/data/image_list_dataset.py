@@ -35,9 +35,9 @@ class ImageListDataset(Dataset):
             self.category_list = category_list
         else:
             self.category_list = [category_list] * len(image_list)
-        assert len(image_list) == len(
-            self.category_list
-        ), "length of image and category lists must be equal"
+        assert len(image_list) == len(self.category_list), (
+            "length of image and category lists must be equal"
+        )
         self.image_list = image_list
         self.transform = transform
 
@@ -57,7 +57,9 @@ class ImageListDataset(Dataset):
         transform = self.transform
 
         try:
-            image = torch.from_numpy(np.ascontiguousarray(read_image(fpath, format="BGR")))
+            image = torch.from_numpy(
+                np.ascontiguousarray(read_image(fpath, format="BGR"))
+            )
             image = image.permute(2, 0, 1).unsqueeze(0).float()  # HWC -> NCHW
             if transform is not None:
                 image = transform(image)

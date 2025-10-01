@@ -42,7 +42,9 @@ def list_keyframes(video_fpath: str, video_stream_idx: int = 0) -> FrameTsList:
             tolerance_backward_seeks = 2
             while True:
                 try:
-                    container.seek(pts + 1, backward=False, any_frame=False, stream=stream)
+                    container.seek(
+                        pts + 1, backward=False, any_frame=False, stream=stream
+                    )
                 except av.AVError as e:
                     # the exception occurs when the video length is exceeded,
                     # we then return whatever data we've already collected
@@ -82,7 +84,8 @@ def list_keyframes(video_fpath: str, video_stream_idx: int = 0) -> FrameTsList:
     except OSError as e:
         logger = logging.getLogger(__name__)
         logger.warning(
-            f"List keyframes: Error opening video file container {video_fpath}, " f"OS error: {e}"
+            f"List keyframes: Error opening video file container {video_fpath}, "
+            f"OS error: {e}"
         )
     except RuntimeError as e:
         logger = logging.getLogger(__name__)
@@ -198,9 +201,9 @@ def read_keyframe_helper_data(fpath: str):
             keyframes_idx = header.index("keyframes")
             for row in csv_reader:
                 video_id = int(row[video_id_idx])
-                assert (
-                    video_id not in video_id_to_keyframes
-                ), f"Duplicate keyframes entry for video {fpath}"
+                assert video_id not in video_id_to_keyframes, (
+                    f"Duplicate keyframes entry for video {fpath}"
+                )
                 video_id_to_keyframes[video_id] = (
                     [int(v) for v in row[keyframes_idx][1:-1].split(",")]
                     if len(row[keyframes_idx]) > 2
@@ -248,9 +251,9 @@ class VideoKeyframeDataset(Dataset):
             self.category_list = category_list
         else:
             self.category_list = [category_list] * len(video_list)
-        assert len(video_list) == len(
-            self.category_list
-        ), "length of video and category lists must be equal"
+        assert len(video_list) == len(self.category_list), (
+            "length of video and category lists must be equal"
+        )
         self.video_list = video_list
         self.frame_selector = frame_selector
         self.transform = transform

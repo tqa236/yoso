@@ -147,9 +147,9 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
         # However the ratio of buggy annotations there is tiny and does not affect accuracy.
         # Therefore we explicitly white-list them.
         ann_ids = [ann["id"] for anns_per_image in anns for ann in anns_per_image]
-        assert len(set(ann_ids)) == len(
-            ann_ids
-        ), "Annotation ids in '{}' are not unique!".format(json_file)
+        assert len(set(ann_ids)) == len(ann_ids), (
+            "Annotation ids in '{}' are not unique!".format(json_file)
+        )
 
     imgs_anns = list(zip(imgs, anns))
     logger.info(
@@ -164,7 +164,7 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
 
     num_instances_without_valid_segmentation = 0
 
-    for (img_dict, anno_dict_list) in imgs_anns:
+    for img_dict, anno_dict_list in imgs_anns:
         record = {}
         record["file_name"] = os.path.join(image_root, img_dict["file_name"])
         record["height"] = img_dict["height"]
@@ -182,9 +182,9 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
             # can trigger this assertion.
             assert anno["image_id"] == image_id
 
-            assert (
-                anno.get("ignore", 0) == 0
-            ), '"ignore" in COCO json file is not supported.'
+            assert anno.get("ignore", 0) == 0, (
+                '"ignore" in COCO json file is not supported.'
+            )
 
             obj = {key: anno[key] for key in ann_keys if key in anno}
             if "bbox" in obj and len(obj["bbox"]) == 0:
@@ -322,7 +322,7 @@ def load_sem_seg(gt_root, image_root, gt_ext="png", image_ext="jpg"):
     )
 
     dataset_dicts = []
-    for (img_path, gt_path) in zip(input_files, gt_files):
+    for img_path, gt_path in zip(input_files, gt_files):
         record = {}
         record["file_name"] = img_path
         record["sem_seg_file_name"] = gt_path

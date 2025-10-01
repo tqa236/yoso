@@ -126,9 +126,9 @@ def load_cityscapes_semantic(image_dir, gt_dir):
             }
         )
     assert len(ret), f"No images found in {image_dir}!"
-    assert PathManager.isfile(
-        ret[0]["sem_seg_file_name"]
-    ), "Please generate labelTrainIds.png with cityscapesscripts/preparation/createTrainIdLabelImgs.py"  # noqa
+    assert PathManager.isfile(ret[0]["sem_seg_file_name"]), (
+        "Please generate labelTrainIds.png with cityscapesscripts/preparation/createTrainIdLabelImgs.py"
+    )  # noqa
     return ret
 
 
