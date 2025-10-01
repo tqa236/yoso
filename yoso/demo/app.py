@@ -22,9 +22,9 @@ import torch
 import os
 from transformers import AutoTokenizer
 import numpy as np
-from gradio_demo.utils_mask import get_mask_location
+from demo.utils_mask import get_mask_location
 from torchvision import transforms
-from gradio_demo import apply_net
+from demo import apply_net
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
 from detectron2.data.detection_utils import (

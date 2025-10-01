@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable
 from PIL import Image
 import json
-from yoso.gradio_demo.app import start_tryon
+from yoso.demo.app import start_tryon
 
 # =============================================================================
 # Image Loading Functions
