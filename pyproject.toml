@@ -41,7 +41,7 @@ dependencies = [
     "tqdm==4.66.1",
     "einops==0.7.0",
     "bitsandbytes==0.39.0",
-    "scipy==1.11.1",
+    "scipy==1.15.3",
     "opencv-python",
     "gradio==4.24.0",
     "fvcore",
