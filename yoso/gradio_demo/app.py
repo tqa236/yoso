@@ -133,10 +133,6 @@ pipe = TryonPipeline.from_pretrained(
 pipe.unet_encoder = UNet_Encoder
 
 
-def start_tryon1(param1, param2):
-    return param1, param2
-
-
 def start_tryon(
     dict, garm_img, garment_des, is_checked, is_checked_crop, denoise_steps, seed
 ):
