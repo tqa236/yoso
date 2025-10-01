@@ -275,9 +275,7 @@ def start_tryon(
         out_img = images[0].resize(crop_size)
         human_img_orig.paste(out_img, (int(left), int(top)))
         return human_img_orig, mask_gray
-    else:
-        return images[0], mask_gray
-    # return images[0], mask_gray
+    return images[0], mask_gray
 
 
 def main():
