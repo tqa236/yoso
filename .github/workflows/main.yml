@@ -14,7 +14,7 @@ jobs:
         python-version: '3.10'
     - name: Run tests
       run: |
-        sudo apt-get install uv
+        curl -LsSf https://astral.sh/uv/install.sh | sh
         uv pip install -e .
 
   repo-review:
