@@ -8,6 +8,7 @@ from skimage.color import rgb2lab, deltaE_cie76
 from torch.utils.data import Dataset, DataLoader
 import os
 import re
+from datetime import datetime
 
 
 class ImageDataset(Dataset):
@@ -188,8 +189,12 @@ if __name__ == "__main__":
         result = compare_images(corrected_path, output_path)
         print(f"Results for {output_path}: {result}")
         results[output_path] = result
-        break  # Remove this line to process all images
-    results_path = "data/output/evaluation_results.json"
+        # break  # Remove this line to process all images
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.makedirs("data/output", exist_ok=True)
+
+    # Update filename and JSON
+    results_path = f"data/output/evaluation_results_{timestamp}.json"
 
     with open(results_path, "w") as f:
         json.dump(results, f, indent=4)
