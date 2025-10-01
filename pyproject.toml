@@ -35,7 +35,7 @@ dependencies = [
 
     # Training & metrics
     "accelerate==0.25.0",
-    "torchmetrics==1.2.1",
+    "torchmetrics==1.8.2",
 
     # Utils & infra
     "tqdm==4.66.1",
