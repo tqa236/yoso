@@ -16,6 +16,11 @@ Time constraints will significantly impact the approach
 - Deployment
 - Refactor the modules to namespaces
 
+## Achievements
+
+- Package the library
+- Set up CI/CD
+
 ## Future improvements
 
 - More precise mask
