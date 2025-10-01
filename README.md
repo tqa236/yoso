@@ -32,7 +32,7 @@ Time constraints will significantly impact the approach
 
 ## Data
 
-- VITON-HD: <https://www.kaggle.com/datasets/marquis03/high-resolution-viton-zalando-dataset>
+- VITON-HD: <https://www.kaggle.com/datasets/marquis03/high-resolution-viton-zalando-dataset>, licensed under **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)**.
 
 ## Discussion
 

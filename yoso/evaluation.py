@@ -1,11 +1,12 @@
 from PIL import Image
 from yoso.demo.app import start_tryon
+from pathlib import Path
 
 
 if __name__ == "__main__":
-    img = Image.open("data/samples/01_on-model.jpg")
+    img = Image.open("data/ci/cloth/00000_00.jpg")
     imgs = {"background": img}
-    garment_img = Image.open("data/samples/01_still-life.jpg")
+    garment_img = Image.open("data/ci/cloth/00000_00.jpg")
     prompt = "a t shirt"
     is_check = True
     is_checked_crop = False
@@ -20,5 +21,6 @@ if __name__ == "__main__":
         denoise_steps,
         seed,
     )
+    Path("data/output").mkdir(parents=True, exist_ok=True)
     image.save("data/output/image.png")
     mask_gray.save("data/output/mask.png")
