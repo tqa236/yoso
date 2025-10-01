@@ -15,10 +15,7 @@ jobs:
     - name: Run tests
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
-        mkdir venv
-        uv ~/venv yoso --python 3.10
-        source ~/venv/yoso/bin/activate
-        uv pip install -e .
+        uv pip install -e . --system
 
   repo-review:
     runs-on: ubuntu-latest
