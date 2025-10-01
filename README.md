@@ -45,9 +45,10 @@ Some of the required input for color correction should already be available from
 ## Installing development requirements
 
 ```bash
-uv ~/venv yoso --python 3.13
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv ~/venv yoso --python 3.10
 source ~/venv/yoso/bin/activate
-uv pip install -r requirements/requirements.txt
+uv pip install -e .
 ```
 
 ## Running the tests
