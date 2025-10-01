@@ -66,3 +66,6 @@ torchaudio = { index = "pytorch-cu118" }
 name = "pytorch-cu118"
 url = "https://download.pytorch.org/whl/cu118"
 explicit = true
+
+[tool.repo-review]
+ignore = ["PY004", "PY007", "PP003", "PP301", "GH102", "GH103", "GH212", "PC", "MY", "RF", "RTD"]
