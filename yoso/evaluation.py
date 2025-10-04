@@ -4,11 +4,14 @@ from yoso.demo.app import start_tryon
 from pathlib import Path
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
-from skimage.color import rgb2lab, deltaE_cie76
 from torch.utils.data import Dataset, DataLoader
 import os
 import re
 from datetime import datetime
+import colour
+from scipy.stats import entropy, wasserstein_distance
+import lpips
+import torch
 
 
 class ImageDataset(Dataset):
@@ -65,7 +68,6 @@ class ImageDataset(Dataset):
 
 
 def load_images(image1_path, image2_path):
-    """Load images using PIL and convert to numpy arrays (RGB format)."""
     img1 = np.array(Image.open(image1_path).convert("RGB").resize((768, 1024)))
     img2 = np.array(Image.open(image2_path).convert("RGB").resize((768, 1024)))
     if img1.shape != img2.shape:
@@ -94,23 +96,91 @@ def calculate_ssim(img1, img2):
     return ssim(gray1, gray2, data_range=255)
 
 
-def calculate_delta_e(img1, img2):
-    """Compute average Delta E in CIELAB space (lower = better)."""
-    lab1 = rgb2lab(img1)
-    lab2 = rgb2lab(img2)
-    return np.mean(deltaE_cie76(lab1, lab2))
+def calculate_delta_e_metrics(img1, img2):
+    lab1 = colour.convert(img1 / 255.0, "RGB", "CIE Lab", target_illuminant="D65")
+    lab2 = colour.convert(img2 / 255.0, "RGB", "CIE Lab", target_illuminant="D65")
+    lab1_flat = lab1.reshape(-1, 3)
+    lab2_flat = lab2.reshape(-1, 3)
+    delta_e76 = colour.difference.delta_E(lab1_flat, lab2_flat, method="CIE 1976")
+    delta_e94 = colour.difference.delta_E(lab1_flat, lab2_flat, method="CIE 1994")
+    delta_e00 = colour.difference.delta_E(lab1_flat, lab2_flat, method="CIE 2000")
+    return {
+        "Delta E (CIE76)": np.mean(delta_e76),
+        "Delta E (CIE94)": np.mean(delta_e94),
+        "Delta E (CIE2000)": np.mean(delta_e00),
+    }
+
+
+def calculate_histogram_metrics(img1, img2, bins=32):
+    lab1 = colour.convert(
+        img1 / 255.0, "RGB", "CIE Lab", target_illuminant="D65"
+    ).reshape(-1, 3)
+    lab2 = colour.convert(
+        img2 / 255.0, "RGB", "CIE Lab", target_illuminant="D65"
+    ).reshape(-1, 3)
+    metrics = {}
+    for i, ch in enumerate(["L", "a", "b"]):
+        h1, _ = np.histogram(
+            lab1[:, i],
+            bins=bins,
+            range=(lab1[:, i].min(), lab1[:, i].max()),
+            density=True,
+        )
+        h2, _ = np.histogram(
+            lab2[:, i],
+            bins=bins,
+            range=(lab2[:, i].min(), lab2[:, i].max()),
+            density=True,
+        )
+        h1 += 1e-8
+        h2 += 1e-8
+        h1 /= np.sum(h1)
+        h2 /= np.sum(h2)
+        metrics[f"{ch}_EMD"] = wasserstein_distance(h1, h2)
+        metrics[f"{ch}_KL"] = entropy(h1, h2)
+    return metrics
+
+
+def compute_lpips(img1, img2, net="vgg"):
+    """Compute LPIPS (Learned Perceptual Image Patch Similarity)."""
+    loss_fn = lpips.LPIPS(net=net)
+    t1 = torch.tensor(img1).permute(2, 0, 1).unsqueeze(0).float() / 127.5 - 1.0
+    t2 = torch.tensor(img2).permute(2, 0, 1).unsqueeze(0).float() / 127.5 - 1.0
+    d = loss_fn(t1, t2)
+    return {"LPIPS": float(d.item())}
+
+
+def calculate_lpips(img1, img2, net="vgg"):
+    loss_fn = lpips.LPIPS(net=net)
+    t1 = torch.tensor(img1).permute(2, 0, 1).unsqueeze(0).float() / 127.5 - 1.0
+    t2 = torch.tensor(img2).permute(2, 0, 1).unsqueeze(0).float() / 127.5 - 1.0
+    d = loss_fn(t1, t2)
+    return float(d.item())
 
 
 def compare_images(image1_path, image2_path):
-    """Compare two images using all metrics."""
     img1, img2 = load_images(image1_path, image2_path)
 
     mse = calculate_mse(img1, img2)
     psnr = calculate_psnr(mse)
     ssim_val = calculate_ssim(img1, img2)
-    delta_e = calculate_delta_e(img1, img2)
 
-    return {"MSE": mse, "PSNR (dB)": psnr, "SSIM": ssim_val, "Delta E (CIE76)": delta_e}
+    delta_e_metrics = calculate_delta_e_metrics(img1, img2)
+
+    hist_metrics = calculate_histogram_metrics(img1, img2)
+
+    lpips_val = calculate_lpips(img1, img2)
+
+    results = {
+        "MSE": mse,
+        "PSNR (dB)": psnr,
+        "SSIM": ssim_val,
+        "LPIPS": lpips_val,
+        **delta_e_metrics,
+        **hist_metrics,
+    }
+
+    return results
 
 
 def ci():
