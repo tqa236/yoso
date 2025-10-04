@@ -45,7 +45,7 @@ dependencies = [
     # Utils & infra
     "tqdm==4.66.1",
     "einops==0.7.0",
-    "bitsandbytes==0.39.0",
+    "bitsandbytes==0.48.1",
     "scipy==1.11.1",
     "opencv-python",
     "gradio==4.24.0",
